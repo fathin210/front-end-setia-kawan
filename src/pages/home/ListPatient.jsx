@@ -1,17 +1,10 @@
 import {
+  Alert,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
+  CircularProgress,
   InputAdornment,
   Pagination,
   Paper,
-  Radio,
-  RadioGroup,
   Stack,
   TextField,
   Typography,
@@ -19,72 +12,45 @@ import {
 import React, { useState } from "react";
 import { Add, Search } from "@mui/icons-material";
 import PatientCard from "./PatientCard";
-import { MobileDatePicker } from "@mui/x-date-pickers";
-import moment from "moment";
+import { fetcher } from "../../utils/fetcher";
+import { safeArray } from "../../utils/common";
+import DialogPatientForm from "./DialogPatientForm";
+import { useDebouncedCallback } from "use-debounce";
+import { useQuery } from "@tanstack/react-query";
 
-const dummy = [
-  {
-    no_urut: 1,
-    nama: "TESTING",
-    no_kartu: "1234658",
-    address: "Jl. RAJAWALI 7",
-    gender: "male",
-  },
-  {
-    no_urut: 1,
-    nama: "TESTING",
-    no_kartu: "1234658",
-    address: "Jl. RAJAWALI 7",
-    gender: "female",
-  },
-  {
-    no_urut: 1,
-    nama: "TESTING",
-    no_kartu: "1234658",
-    address: "Jl. RAJAWALI 7",
-    gender: "female",
-  },
-  {
-    no_urut: 1,
-    nama: "TESTING",
-    no_kartu: "1234658",
-    address: "Jl. RAJAWALI 7",
-    gender: "male",
-  },
-  {
-    no_urut: 1,
-    nama: "TESTING",
-    no_kartu: "1234658",
-    address: "Jl. RAJAWALI 7",
-    gender: "male",
-  },
-  {
-    no_urut: 1,
-    nama: "TESTING",
-    no_kartu: "1234658",
-    address: "Jl. RAJAWALI 7",
-    gender: "male",
-  },
-  {
-    no_urut: 1,
-    nama: "TESTING",
-    no_kartu: "1234658",
-    address: "Jl. RAJAWALI 7",
-    gender: "male",
-  },
-  {
-    no_urut: 1,
-    nama: "TESTING",
-    no_kartu: "1234658",
-    address: "Jl. RAJAWALI 7",
-    gender: "male",
-  },
-];
+const fetchPatients = async ({ queryKey }) => {
+  const [, { page, search, address }] = queryKey;
+  const response = await fetcher(
+    `${
+      import.meta.env.VITE_API_BASE_URL
+    }/pasien?page=${page}&limit=20&search=${search}&address=${address}`
+  );
+  return response;
+};
 
 const ListPatient = () => {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [address, setAddress] = useState("");
   const [dialog, setDialog] = useState(null);
 
-  const handleDialog = (value) => () => setDialog(value);
+  const debouncedSetSearch = useDebouncedCallback(
+    (value) => setSearch(value),
+    500
+  );
+  const debouncedSetAddress = useDebouncedCallback(
+    (value) => setAddress(value),
+    500
+  );
+
+  const { data, error, isLoading, refetch } = useQuery({
+    queryKey: ["patients", { page, search, address }],
+    queryFn: fetchPatients,
+    keepPreviousData: true,
+  });
+
+  const handleDialog = (value) => setDialog(value);
+  const handlePage = (_, value) => setPage(value);
 
   return (
     <>
@@ -104,113 +70,68 @@ const ListPatient = () => {
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ flexGrow: 1 }}
           >
             <Typography>Daftar Pasien</Typography>
             <Button
-              onClick={handleDialog("add_new_patient")}
+              onClick={() => handleDialog("add_new_patient")}
               startIcon={<Add />}
               variant="contained"
+              color="success"
             >
-              Input Pasien Baru
+              Registrasi Pasien Baru
             </Button>
           </Stack>
-          <TextField
-            placeholder="Cari Pasien"
-            slotProps={{
-              input: {
+          <Stack direction="row" justifyContent="space-between" gap={2}>
+            <TextField
+              placeholder="Cari Pasien (Daftar Lengkap)"
+              name="search"
+              onChange={(event) => debouncedSetSearch(event.target.value)}
+              fullWidth
+              autoComplete="off"
+              InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
                     <Search />
                   </InputAdornment>
                 ),
-              },
-            }}
-          />
-          <Stack gap={2} sx={{ flexGrow: 2, overflow: "auto" }}>
-            {dummy.map((item, index) => (
-              <PatientCard data={item} key={index} />
-            ))}
+              }}
+            />
+            <TextField
+              placeholder="Cari Alamat Pasien"
+              name="address"
+              fullWidth
+              onChange={(event) => debouncedSetAddress(event.target.value)}
+              autoComplete="off"
+            />
+          </Stack>
+
+          <Stack gap={3} sx={{ flexGrow: 1, overflow: "auto", height: "54vh" }}>
+            {error ? (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                Terjadi kesalahan saat mengambil data: {error.message}
+              </Alert>
+            ) : isLoading ? (
+              <CircularProgress sx={{ m: "auto" }} />
+            ) : (
+              safeArray(data?.data).map((item, index) => (
+                <PatientCard data={item} key={index} />
+              ))
+            )}
           </Stack>
           <Pagination
             color="primary"
             shape="rounded"
-            count={10}
-            sx={{ flexGrow: 1 }}
+            page={page}
+            onChange={handlePage}
+            count={data?.total_pages}
           />
         </Stack>
       </Paper>
-      <Dialog
-        maxWidth="md"
-        fullWidth
-        open={dialog === "add_new_patient"}
-        onClose={handleDialog(null)}
-      >
-        <DialogTitle>Formulir Pasien Baru</DialogTitle>
-        <DialogContent>
-          <Stack gap={3}>
-            <TextField
-              label="Nama Pasien"
-              placeholder="Masukkan nama pasien"
-              variant="standard"
-              fullWidth
-            />
-            <Stack direction="row" justifyContent="space-between" gap={4}>
-              <TextField
-                label="Tempat Lahir"
-                placeholder="Masukkan Tempat Lahir"
-                variant="standard"
-                sx={{ flex: 1 }}
-              />
-              <MobileDatePicker
-                defaultValue={moment(Date.now())}
-                sx={{ flex: 1 }}
-                format="DD/MM/YYYY"
-                label="Tanggal Lahir"
-              />
-            </Stack>
-            <TextField
-              label="Alamat"
-              placeholder="Masukkan Alamat"
-              variant="standard"
-              fullWidth
-            />
-            <FormControl>
-              <FormLabel>Jenis Kelamin</FormLabel>
-              <RadioGroup row>
-                <FormControlLabel
-                  value="male"
-                  control={<Radio />}
-                  label="Laki-laki"
-                />
-                <FormControlLabel
-                  value="female"
-                  control={<Radio />}
-                  label="Perempuan"
-                />
-              </RadioGroup>
-            </FormControl>
-            <TextField
-              label="No. Telepon / HP"
-              placeholder="Masukkan Alamat"
-              variant="standard"
-              type="tel"
-              fullWidth
-              autoComplete="off"
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleDialog(null)}
-          >
-            Batal
-          </Button>
-          <Button variant="contained">Simpan</Button>
-        </DialogActions>
-      </Dialog>
+      <DialogPatientForm
+        isOpen={dialog === "add_new_patient"}
+        handleDialog={handleDialog}
+        refetch={refetch}
+      />
     </>
   );
 };

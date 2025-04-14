@@ -1,16 +1,16 @@
+// src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
-import Home from "./pages/home/Home";
 import { ThemeProvider } from "@mui/material";
-import { useThemeStore } from "./hooks/useThemeStore";
+import { useThemeStore } from "./store/themeStore";
 import { darkTheme, lightTheme } from "./theme";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
+import { routes } from "./routes";
 
 const App = () => {
   const { darkMode } = useThemeStore();
-
   const theme = darkMode ? darkTheme : lightTheme;
 
   return (
@@ -18,8 +18,24 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <Router>
           <Routes>
-            <Route path="/" element={<Layout>Test</Layout>}>
-              <Route index element={<Home />} />
+            <Route path="/" element={<Layout />}>
+              {routes.map((route, index) =>
+                route.children ? (
+                  route.children.map((child, childIndex) => (
+                    <Route
+                      key={childIndex}
+                      path={child.path}
+                      element={child.element}
+                    />
+                  ))
+                ) : (
+                  <Route
+                    key={index}
+                    path={route.path}
+                    element={route.element}
+                  />
+                )
+              )}
             </Route>
           </Routes>
         </Router>

@@ -11,7 +11,8 @@ import {
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { useThemeStore } from "../hooks/useThemeStore";
+import { useThemeStore } from "../store/themeStore";
+import GlobalSnackbar from "./GlobalSnackbar";
 
 const Layout = () => {
   const { darkMode, toggleTheme } = useThemeStore();
@@ -22,9 +23,16 @@ const Layout = () => {
 
   useEffect(() => {
     // Unexpand sidebar otomatis pada halaman tertentu
-    const unexpandedPages = ["/login", "/settings"];
+    const unexpandedPages = [
+      "/",
+      "/login",
+      "/settings",
+      "/employee/comissions",
+    ];
     if (unexpandedPages.includes(location.pathname)) {
       setOpen(false);
+    } else {
+      setOpen(true);
     }
   }, [location.pathname]);
 
@@ -55,11 +63,11 @@ const Layout = () => {
               Setia Kawan
             </Typography>
           </Box>
-          <Box>
+          {/* <Box>
             <Button variant="contained" onClick={toggleTheme}>
               {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             </Button>
-          </Box>
+          </Box> */}
         </Toolbar>
       </AppBar>
 
@@ -78,6 +86,7 @@ const Layout = () => {
         <Toolbar />
         <Outlet />
       </Box>
+      <GlobalSnackbar />
     </Box>
   );
 };

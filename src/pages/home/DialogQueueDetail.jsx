@@ -169,7 +169,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
 
   const totalSetelahDP = useMemo(() => {
     return watch("kdtindakan") !== "03" && dpAmount > 0
-      ? Math.max(0, totalBiaya - dpAmount)
+      ? totalBiaya - dpAmount
       : totalBiaya;
   }, [totalBiaya, dpAmount, watch("kdtindakan")]);
 
@@ -549,7 +549,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   {/* Total Akhir selalu ditampilkan */}
                   <TableRow>
                     <TableCell>
-                      <Typography fontWeight="bold">Total Akhir</Typography>
+                      <Typography fontWeight="bold">Total Akhir ({totalSetelahDP >= 0 ? "Sisa Pembayaran" : "Kelebihan Pembayaran"})</Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Typography fontWeight="bold">

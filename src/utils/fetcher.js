@@ -27,10 +27,10 @@ const baseFetcher = async (url, options = {}) => {
       // 🔴 Cek jika token tidak valid atau expired
       if (response.status === 401 || /token/i.test(message)) {
         // Hapus token dari localStorage
-        localStorage.removeItem("access_token");
+        localStorage.clear()
 
         // Redirect ke login
-        window.location.href = "/login";
+        window.location.href = "/admin-setiakawan/login";
 
         // Stop eksekusi berikutnya
         return;

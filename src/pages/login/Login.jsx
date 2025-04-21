@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Grid,
   Box,
@@ -10,9 +10,15 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useLogin } from "../../hooks/useLogin";
+import LoginImage from "../../assets/login-image.png";
+import { useAuthStore } from "../../store/useAuthStore";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const { mutate: login, isLoading, isError, error } = useLogin();
+  const navigate = useNavigate();
+
+  const { token } = useAuthStore();
 
   const [draft, setDraft] = useState({
     username: null,
@@ -26,6 +32,12 @@ const Login = () => {
     e.preventDefault();
     login(draft);
   };
+
+  useEffect(() => {
+    if (token) {
+      navigate("/");
+    }
+  }, [token]);
 
   return (
     <Grid container sx={{ height: "100vh" }}>
@@ -119,7 +131,7 @@ const Login = () => {
       >
         <Box
           component="img"
-          src="/login-assets/login-image.png" // ganti dengan file ilustrasi kamu
+          src={LoginImage} // ganti dengan file ilustrasi kamu
           alt="Login Illustration"
           sx={{
             height: "100%",

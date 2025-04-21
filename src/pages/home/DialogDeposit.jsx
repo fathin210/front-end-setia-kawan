@@ -16,6 +16,13 @@ import {
   Grid,
   Card,
   CardContent,
+  TableContainer,
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper,
+  Box,
 } from "@mui/material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
@@ -30,13 +37,15 @@ import { useFetchPDFDeposit } from "../../hooks/useFetchPDFDeposit";
 import { Print } from "@mui/icons-material";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
 import usePdfStore from "../../store/pdfStore";
+import { CONFIRM_DELETE } from "../../constants/variables";
 
 const DialogDeposit = ({ isOpen, onClose, data }) => {
   const { data: masterKaryawan } = useFetchKaryawan();
   const mutation = useCreateDeposit();
   const editMutation = useUpdateDeposit();
-  const { mutateAsync: addToQueue } = useAddToQueueMutation();
+  const addToQueue = useAddToQueueMutation();
   const { openDialog, setPdfURL, setLoading, setError } = usePdfStore();
+  const [dialog, setDialog] = useState(false);
 
   const defaultValues = {
     ...data,
@@ -53,7 +62,11 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
     control,
     handleSubmit,
     formState: { errors },
+    getValues,
+    watch,
   } = useForm({ defaultValues });
+
+  const jumlahTagihan = watch("tarif_per_gigi") * watch("jumlah_gigi");
 
   const [iddpResult, setIddpResult] = useState(data?.iddp);
 
@@ -75,10 +88,7 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
       }
 
       if (!data?.iddp && result?.iddp) {
-        await addToQueue({
-          ...result,
-          tanggal_pelaks: result.tanggal_diambil,
-        });
+        setDialog(CONFIRM_DELETE);
       }
     } catch (error) {
       console.error(error);
@@ -160,6 +170,7 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
                     value={field.value ? moment(field.value) : null}
                     sx={{ width: "100%" }}
                     slotProps={{ actionBar: { actions: ["today"] } }}
+                    minDate={moment()}
                   />
                 )}
               />
@@ -310,31 +321,109 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} variant="contained" color="error">
-            Tutup
-          </Button>
-          <Button
-            onClick={handleSubmit(onSubmit)}
-            color="primary"
-            variant="contained"
-            disabled={mutation.isLoading}
-          >
-            {mutation.isLoading ? "Menambahkan..." : "Simpan"}
-          </Button>
-          {iddpResult && (
-            <Button
-              loading={isFetching}
-              onClick={handlePrintDeposit}
-              color="success"
-              variant="contained"
-              disabled={!iddpResult}
-              startIcon={<Print />}
-            >
-              Cetak Deposit
-            </Button>
-          )}
+          <Grid container spacing={2} p={2}>
+            <Grid item xs={12}>
+              <TableContainer component={Paper} sx={{ mt: 2 }}>
+                <Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>
+                        <Typography fontWeight="bold">
+                          Jumlah Tagihan
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography fontWeight="bold">
+                          {formatCurrency(jumlahTagihan)}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <Typography fontWeight="bold">Deposit</Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography fontWeight="bold">
+                          - {formatCurrency(watch("jumlah"))}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <Typography fontWeight="bold">{jumlahTagihan - watch("jumlah") > 0 ? "Sisa Pembayaran" : "Kelebihan Pembayaran"}</Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography fontWeight="bold">
+                          {formatCurrency(jumlahTagihan - watch("jumlah"))}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid>
+            <Grid item xs={12}>
+              <Box display="flex" justifyContent="flex-end" gap={2}>
+                <Button onClick={onClose} variant="contained" color="error">
+                  Tutup
+                </Button>
+                <Button
+                  onClick={handleSubmit(onSubmit)}
+                  color="primary"
+                  variant="contained"
+                  disabled={mutation.isLoading}
+                >
+                  {mutation.isLoading ? "Menambahkan..." : "Simpan"}
+                </Button>
+                {iddpResult && (
+                  <Button
+                    loading={isFetching}
+                    onClick={handlePrintDeposit}
+                    color="success"
+                    variant="contained"
+                    disabled={!iddpResult}
+                    startIcon={<Print />}
+                  >
+                    Cetak Deposit
+                  </Button>
+                )}
+              </Box>
+            </Grid>
+          </Grid>
         </DialogActions>
       </Dialog>
+      {dialog === CONFIRM_DELETE && (
+        <Dialog open>
+          <DialogContent>
+            <Typography>
+              {`Apakah kamu ingin mendaftarkan pasien ini di tanggal ${moment(
+                watch("tanggal_diambil")
+              ).format("DD/MM/YYYY")}?`}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" onClick={() => setDialog(false)}>
+              Tutup
+            </Button>
+            <Button
+              variant="contained"
+              onClick={async () => {
+                try {
+                  await addToQueue.mutateAsync({
+                    ...data,
+                    tanggal_pelaks: watch("tanggal_diambil"),
+                  });
+                  setDialog(false);
+                } catch (error) {}
+              }}
+              color="error"
+              disabled={addToQueue.isPending}
+            >
+              {addToQueue.isPending ? "Memproses..." : "Ya, daftarkan"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </>
   );
 };

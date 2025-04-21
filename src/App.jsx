@@ -19,9 +19,9 @@ const App = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterMoment}>
       <ThemeProvider theme={theme}>
-        <Router>
+        <Router basename="/admin-setiakawan">
           <Routes>
-          <Route path={ROUTES.LOGIN} element={<Login />} />
+            <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path="/" element={<Layout />}>
               {routes.map((route, index) =>
                 route.children ? (

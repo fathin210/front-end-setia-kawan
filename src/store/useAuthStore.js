@@ -7,7 +7,10 @@ export const useAuthStore = create(
       user: null,
       token: null,
       login: (user, token) => set({ user, token }),
-      logout: () => set({ user: null, token: null }),
+      logout: () => {
+        localStorage.clear(); // Hapus semua localStorage
+        set({ user: null, token: null });
+      },
     }),
     {
       name: "auth-storage", // key untuk localStorage

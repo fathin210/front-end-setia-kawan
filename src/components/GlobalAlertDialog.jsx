@@ -46,6 +46,7 @@ const GlobalAlertDialog = ({ showClose = true }) => {
       open={open}
       onClose={severity === "waiting" ? undefined : closeAlert}
       disableEscapeKeyDown
+      sx={{zIndex: 9999}}
     >
       <DialogTitle>{renderTitle()}</DialogTitle>
       <DialogContent

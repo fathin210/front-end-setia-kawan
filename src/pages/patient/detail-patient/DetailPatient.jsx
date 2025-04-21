@@ -16,19 +16,20 @@ import {
   Box,
   CircularProgress,
   Alert,
-  IconButton,
   Stack,
   Avatar,
   Button,
 } from "@mui/material";
 import moment from "moment";
-import { Edit, Person } from "@mui/icons-material";
+import { Person } from "@mui/icons-material";
 import { formatCurrency } from "../../../utils/common";
 import useListQueue from "../../../hooks/useListQueue";
 import DialogPatientForm from "../../home/DialogPatientForm";
 import usePatientStore from "../../../store/patientStore";
 import { ADD_QUEUE, EDIT_PATIENT } from "../../../constants/variables";
 import DialogQueue from "../../home/DialogQueue";
+import MaleImage from "../../../assets/male.png";
+import FemaleImage from "../../../assets/female.png";
 
 const DetailPatient = () => {
   const { activePatient } = usePatientStore();
@@ -66,9 +67,9 @@ const DetailPatient = () => {
             <Avatar
               src={
                 activePatient?.jnskel === "L"
-                  ? "/assets/male.png"
+                  ? MaleImage
                   : activePatient?.jnskel === "P"
-                  ? "/assets/female.png"
+                  ? FemaleImage
                   : undefined // Tidak pakai src kalau gender tidak ada
               }
               sx={{

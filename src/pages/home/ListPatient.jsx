@@ -2,6 +2,7 @@ import {
   Alert,
   Button,
   CircularProgress,
+  IconButton,
   InputAdornment,
   Pagination,
   Paper,
@@ -10,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
-import { Add, Search } from "@mui/icons-material";
+import { Add, Close, Search } from "@mui/icons-material";
 import PatientCard from "./PatientCard";
 import { fetcher } from "../../utils/fetcher";
 import { safeArray } from "../../utils/common";
@@ -30,18 +31,45 @@ const fetchPatients = async ({ queryKey }) => {
 
 const ListPatient = () => {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [address, setAddress] = useState("");
   const [dialog, setDialog] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [addressInput, setAddressInput] = useState("");
 
-  const debouncedSetSearch = useDebouncedCallback(
-    (value) => setSearch(value),
-    500
-  );
-  const debouncedSetAddress = useDebouncedCallback(
-    (value) => setAddress(value),
-    500
-  );
+  const [search, setSearch] = useState(""); // untuk query/search backend
+  const [address, setAddress] = useState(""); // untuk query/search backend
+
+  // Debounced setter
+  const debouncedUpdateSearch = useDebouncedCallback((val) => {
+    setSearch(val);
+  }, 500);
+
+  const debouncedUpdateAddress = useDebouncedCallback((val) => {
+    setAddress(val);
+  }, 500);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedUpdateSearch(value);
+  };
+
+  const handleAddressChange = (e) => {
+    const value = e.target.value;
+    setAddressInput(value);
+    debouncedUpdateAddress(value);
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearch("");
+    debouncedUpdateSearch.cancel(); // optional, untuk menghentikan debounce
+  };
+
+  const clearAddress = () => {
+    setAddressInput("");
+    setAddress("");
+    debouncedUpdateAddress.cancel(); // optional, untuk menghentikan debounce
+  };
 
   const { data, error, isLoading, refetch } = useQuery({
     queryKey: ["patients", { page, search, address }],
@@ -65,13 +93,13 @@ const ListPatient = () => {
           height: "100%",
         }}
       >
-        <Stack gap={4} sx={{ height: "100%" }}>
+        <Stack gap={3} sx={{ height: "100%" }}>
           <Stack
             direction="row"
             alignItems="center"
             justifyContent="space-between"
           >
-            <Typography>Daftar Pasien</Typography>
+            <Typography variant="h6">Daftar Pasien</Typography>
             <Button
               onClick={() => handleDialog("add_new_patient")}
               startIcon={<Add />}
@@ -85,23 +113,48 @@ const ListPatient = () => {
             <TextField
               placeholder="Cari Pasien (Daftar Lengkap)"
               name="search"
-              onChange={(event) => debouncedSetSearch(event.target.value)}
+              value={searchInput}
+              onChange={handleSearchChange}
               fullWidth
               autoComplete="off"
+              margin="normal"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
                     <Search />
                   </InputAdornment>
                 ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {searchInput && (
+                      <IconButton onClick={clearSearch}>
+                        <Close />
+                      </IconButton>
+                    )}
+                  </InputAdornment>
+                ),
               }}
             />
+
             <TextField
               placeholder="Cari Alamat Pasien"
               name="address"
+              value={addressInput}
+              onChange={handleAddressChange}
               fullWidth
-              onChange={(event) => debouncedSetAddress(event.target.value)}
               autoComplete="off"
+              margin="normal"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {addressInput && (
+                      <IconButton onClick={clearAddress}>
+                        <Close />
+                      </IconButton>
+                    )}
+                  </InputAdornment>
+                ),
+              }}
             />
           </Stack>
 

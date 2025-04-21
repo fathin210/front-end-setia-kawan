@@ -28,7 +28,6 @@ import {
   useUpdateKaryawan,
 } from "../../../hooks/useMutateKaryawan";
 import { useDebouncedCallback } from "use-debounce";
-import useSnackbarStore from "../../../store/snackbarStore";
 
 const defaultForm = {
   idkaryawan: "",
@@ -40,7 +39,6 @@ const defaultForm = {
 };
 
 const AdminEmployee = () => {
-  const { showSnackbar } = useSnackbarStore.getState();
   const [search, setSearch] = useState("");
   const {
     data: karyawans,
@@ -83,16 +81,13 @@ const AdminEmployee = () => {
     try {
       if (editing) {
         await updateMutation.mutateAsync(form);
-        showSnackbar("Data berhasil diperbarui", "success");
       } else {
         await createMutation.mutateAsync(form);
-        showSnackbar("Data berhasil ditambahkan", "success");
       }
       refetch();
       handleClose();
     } catch (err) {
       setError("Gagal menyimpan data.");
-      showSnackbar("Terjadi kesalahan saat menyimpan data", "error");
     }
   };
 
@@ -101,10 +96,7 @@ const AdminEmployee = () => {
       try {
         await deleteMutation.mutateAsync(id);
         refetch();
-        showSnackbar("Data berhasil dihapus", "success");
-      } catch (err) {
-        showSnackbar("Gagal menghapus data", "error");
-      }
+      } catch (err) {}
     }
   };
 

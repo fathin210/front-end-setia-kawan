@@ -9,6 +9,6 @@ export const useFetchMasterAction = () => {
         `${import.meta.env.VITE_API_BASE_URL
         }/tindakan`
       ),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 20,
   });
 };

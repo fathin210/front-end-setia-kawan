@@ -6,16 +6,19 @@ import {
   Box,
   IconButton,
   CssBaseline,
-  Button,
 } from "@mui/material";
-import { Menu as MenuIcon } from "@mui/icons-material";
+import { Logout, Menu as MenuIcon } from "@mui/icons-material";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { useThemeStore } from "../store/themeStore";
 import GlobalSnackbar from "./GlobalSnackbar";
+import { useAuthStore } from "../store/useAuthStore";
+import GlobalAlertDialog from "./GlobalAlertDialog";
+import DialogPdf from "./DialogPdf";
 
 const Layout = () => {
   const { darkMode, toggleTheme } = useThemeStore();
+  const { user, logout } = useAuthStore();
 
   const location = useLocation();
   const [open, setOpen] = useState(true);
@@ -63,11 +66,12 @@ const Layout = () => {
               Setia Kawan
             </Typography>
           </Box>
-          {/* <Box>
-            <Button variant="contained" onClick={toggleTheme}>
-              {darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            </Button>
-          </Box> */}
+          <Box display="flex" alignItems="center" gap={6}>
+            <Typography>{user?.nama_lengkap}</Typography>
+            <IconButton onClick={logout}>
+              <Logout />
+            </IconButton>
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -87,6 +91,8 @@ const Layout = () => {
         <Outlet />
       </Box>
       <GlobalSnackbar />
+      <GlobalAlertDialog />
+      <DialogPdf />
     </Box>
   );
 };

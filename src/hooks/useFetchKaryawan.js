@@ -6,6 +6,6 @@ export const useFetchKaryawan = (search = "") => {
     queryKey: ["karyawan", search],
     queryFn: () =>
       fetcher(`${import.meta.env.VITE_API_BASE_URL}/karyawan?search=${search}`),
-    staleTime: 1000 * 60 * 5, // 5 menit
+    staleTime: 1000 * 60 * 2, // 5 menit
   });
 };

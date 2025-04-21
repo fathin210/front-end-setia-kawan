@@ -16,6 +16,6 @@ export const useFetchDeposit = (nomorpasien = null, iddp = null) => {
 
       return fetcher(nomorpasien ? url : baseURL);
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
   });
 };

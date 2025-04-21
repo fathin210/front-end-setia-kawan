@@ -15,13 +15,14 @@ import {
   Grid,
   DialogActions,
   Button,
-  IconButton,
   TableContainer,
   Paper,
   Table,
   TableBody,
   TableRow,
   TableCell,
+  CircularProgress,
+  FormHelperText,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useFetchMasterAction } from "../../hooks/useFetchMasterAction";
@@ -30,15 +31,17 @@ import moment from "moment";
 import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
 import { useUpdateQueue } from "../../hooks/useMutateQueue";
 import { useFetchMasterPelayanan } from "../../hooks/useFetchMasterPelayanan";
-import { kategoriMap, PRINT } from "../../constants/variables";
+import { kategoriMap } from "../../constants/variables";
 import { useFetchShift } from "../../hooks/useFetchShift";
 import { useFetchPDFInvoice } from "../../hooks/useFetchPDFInvoice";
-import Pdf from "../../components/Pdf";
-import { Close, Print } from "@mui/icons-material";
+import { Print } from "@mui/icons-material";
 import { useFetchDeposit } from "../../hooks/useFetchDeposit";
+import { Controller, useForm } from "react-hook-form";
+import usePdfStore from "../../store/pdfStore";
 
 const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
-  const { data: masterTindakan } = useFetchMasterAction();
+  const { data: masterTindakan, isFetching: isFetchingMasterTindakan } =
+    useFetchMasterAction();
   const { data: masterKaryawan } = useFetchKaryawan();
   const { data: masterPelayanan } = useFetchMasterPelayanan();
   const { data: masterShift } = useFetchShift();
@@ -46,12 +49,22 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
     enabled: false,
   });
 
+  const { openDialog, setPdfURL, setLoading, setError } = usePdfStore();
+
   const mutation = useUpdateQueue();
 
-  const [draft, setDraft] = useState(queue || {});
-  const deposit = useFetchDeposit(draft?.nomorpasien, draft?.iddp);
-  const [pdfURL, setPdfURL] = useState("");
-  const [dialog, setDialog] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+    watch,
+  } = useForm({
+    defaultValues: { ...queue, kdtindakan: "01" },
+  });
+
+  const deposit = useFetchDeposit(watch("nomorpasien"), watch("iddp"));
   const [isPrintable, setIsPrintable] = useState(
     queue?.total_biaya > 0 || queue?.biaya_perbaikan > 0
   );
@@ -69,77 +82,74 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
       };
     }
     return null;
-  }, [deposit.data, deposit.isSuccess, queue]);
+  }, [deposit, queue]);
 
   const isDpExist = !!resolvedDP;
   const currentPelayanan = useMemo(() => {
     return safeArray(masterPelayanan).find((item) => {
-      if (draft?.kdshift && draft?.jml_gigi && draft?.tarif) {
+      if (watch("kdshift") && watch("jml_gigi") && watch("tarif")) {
         return (
-          item.kdshift === draft.kdshift &&
-          item.jml_gigi === draft.jml_gigi &&
-          item.kategori === kategoriMap[draft.tarif]
+          item.kdshift === watch("kdshift") &&
+          item.jml_gigi === watch("jml_gigi") &&
+          item.kategori === kategoriMap[watch("tarif")]
         );
       }
     });
-  }, [masterPelayanan, draft?.kdshift, draft?.jml_gigi, draft?.tarif]);
+  }, [masterPelayanan, watch("kdshift"), watch("jml_gigi"), watch("tarif")]);
 
-  const handleTarifChange = (e) => {
+  const handleTarifChange = (e, field) => {
     const value = Number(e.target.value.replace(/\D/g, ""));
-    setDraft((prev) => ({ ...prev, tarif: value || "" }));
+    field.onChange(value || "");
   };
 
-  const handleBiayaPerbaikanChange = (e) => {
+  const handleBiayaPerbaikanChange = (e, field) => {
     const value = Number(e.target.value.replace(/\D/g, ""));
-    setDraft((prev) => ({ ...prev, biaya_perbaikan: value || "" }));
+    field.onChange(value || "");
   };
 
   const handleTindakanChange = (e) => {
     const newKode = e.target.value;
+
+    setValue("kdtindakan", newKode); // wajib untuk form state
+
     if (newKode === "03") {
-      setDraft({
-        ...queue,
-        kdtindakan: newKode,
-        dp: 0,
-        iddp: queue?.iddp,
-        tarif: 0,
-        batal_dp: queue?.iddp ? true : false,
-        jml_gigi: 0,
-      });
+      setValue("dp", 0);
+      setValue("iddp", queue?.iddp || null);
+      setValue("tarif", 0);
+      setValue("batal_dp", !!queue?.iddp);
+      setValue("jml_gigi", 0);
     } else {
-      setDraft({
-        ...draft,
-        idkaryawan: resolvedDP?.idkaryawan || null,
-        jml_gigi: resolvedDP?.jumlah_gigi || 0,
-        tarif: isDpExist && newKode !== "03" ? resolvedDP?.tarif_per_gigi : 0,
-        kdtindakan: newKode,
-      });
+      setValue("idkaryawan", resolvedDP?.idkaryawan || null);
+      setValue("jml_gigi", resolvedDP?.jumlah_gigi || 0);
+      setValue(
+        "tarif",
+        isDpExist && newKode !== "03" ? resolvedDP?.tarif_per_gigi : 0
+      );
     }
   };
 
   const handlePrintInvoice = async () => {
-    const { data } = await refetch();
-    if (data) {
-      const url = URL.createObjectURL(data);
-      setPdfURL(url);
-      setDialog(PRINT);
+    try {
+      openDialog("Kwitansi");
+      setLoading(true);
+      const { data } = await refetch();
+      if (data) {
+        const url = URL.createObjectURL(data);
+        setPdfURL(url);
+        setLoading(false);
+      }
+    } catch (error) {
+      setError(error?.message);
     }
   };
 
   const handleUpdateQueue = async () => {
     try {
       await mutation.mutateAsync({
-        ...draft,
-        jam: draft?.jam || moment().format("HH:mm:ss"),
-        iddp: resolvedDP?.iddp || draft?.iddp,
-        dp: resolvedDP?.jumlah || draft?.dp,
-        status: "x",
-      });
-      setDraft({
-        ...draft,
-        jam: draft?.jam || moment().format("HH:mm:ss"),
-        iddp: resolvedDP?.iddp || draft?.iddp,
-        dp: resolvedDP?.jumlah || draft?.dp,
+        ...watch(),
+        jam: watch("jam") || moment().format("HH:mm:ss"),
+        iddp: resolvedDP?.iddp || watch("iddp"),
+        dp: resolvedDP?.jumlah || watch("dp"),
         status: "x",
       });
       setIsPrintable(true);
@@ -148,46 +158,41 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
     }
   };
 
-  const handleDialogClose = () => setDialog(false);
-
   const totalPemasangan =
-    draft?.tarif && draft?.jml_gigi ? draft.tarif * draft.jml_gigi : 0;
-  const totalPerbaikan = draft?.biaya_perbaikan || 0;
+    watch("tarif") && watch("jml_gigi")
+      ? watch("tarif") * watch("jml_gigi")
+      : 0;
+  const totalPerbaikan = watch("biaya_perbaikan") || 0;
   const totalBiaya = totalPemasangan + totalPerbaikan;
 
   const dpAmount = useMemo(() => resolvedDP?.jumlah || 0, [resolvedDP]);
 
   const totalSetelahDP = useMemo(() => {
-    return draft?.kdtindakan !== "03" && dpAmount > 0
+    return watch("kdtindakan") !== "03" && dpAmount > 0
       ? Math.max(0, totalBiaya - dpAmount)
       : totalBiaya;
-  }, [totalBiaya, dpAmount]);
+  }, [totalBiaya, dpAmount, watch("kdtindakan")]);
 
   useEffect(() => {
     if (currentPelayanan) {
-      setDraft((prev) => ({
-        ...prev,
-        komisi_kolektif: currentPelayanan.komisi_kolektif || 0,
-        komisi_pribadi: currentPelayanan.komisi_pribadi || 0,
-      }));
+      setValue("komisi_kolektif", currentPelayanan.komisi_kolektif || 0);
+      setValue("komisi_pribadi", currentPelayanan.komisi_pribadi || 0);
     }
-  }, [currentPelayanan]);
+  }, [currentPelayanan, setValue]);
 
   useEffect(() => {
     if (resolvedDP) {
-      setDraft((prev) => ({
-        ...prev,
-        idkaryawan: resolvedDP.idkaryawan,
-        jml_gigi: resolvedDP.jumlah_gigi,
-      }));
+      setValue("idkaryawan", resolvedDP.idkaryawan);
+      setValue("jml_gigi", resolvedDP.jumlah_gigi);
+      setValue("tarif", resolvedDP.tarif_per_gigi);
     }
-  }, [resolvedDP]);
+  }, [resolvedDP, setValue]);
 
   return (
-    <>
-      <Dialog maxWidth="md" fullWidth open={isOpen} onClose={onClose}>
-        <DialogTitle>Rincian Biaya</DialogTitle>
-        <DialogContent>
+    <Dialog maxWidth="md" fullWidth open={isOpen}>
+      <DialogTitle>Rincian Biaya</DialogTitle>
+      <DialogContent>
+        <form onSubmit={handleSubmit(handleUpdateQueue)}>
           <Box sx={{ mt: 2 }}>
             <Grid container spacing={2}>
               {/* Tanggal dan Nama Pasien */}
@@ -215,118 +220,183 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
               {/* Pilih Tindakan */}
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <FormLabel>Layanan</FormLabel>
-                  <RadioGroup
-                    row
-                    value={draft?.kdtindakan || ""}
-                    onChange={handleTindakanChange}
-                  >
-                    {safeArray(masterTindakan).map((item) => (
-                      <FormControlLabel
-                        key={item?.kdtindakan}
-                        control={<Radio />}
-                        value={item?.kdtindakan}
-                        label={item?.nmtindakan}
-                      />
-                    ))}
-                  </RadioGroup>
+                  <FormLabel>Tindakan</FormLabel>
+                  {isFetchingMasterTindakan ? (
+                    <CircularProgress />
+                  ) : (
+                    <Controller
+                      name="kdtindakan"
+                      control={control}
+                      rules={{ required: "Tindakan wajib dipilih" }}
+                      render={({ field }) => (
+                        <RadioGroup
+                          row
+                          {...field}
+                          onChange={handleTindakanChange}
+                        >
+                          {safeArray(masterTindakan).map((item) => (
+                            <FormControlLabel
+                              key={item?.kdtindakan}
+                              control={<Radio />}
+                              value={item?.kdtindakan}
+                              label={item?.nmtindakan}
+                            />
+                          ))}
+                        </RadioGroup>
+                      )}
+                    />
+                  )}
+                  {errors.kdtindakan && (
+                    <FormHelperText>{errors.kdtindakan.message}</FormHelperText>
+                  )}
                 </FormControl>
               </Grid>
 
               {/* Nama Teknisi */}
-              {draft?.kdtindakan && (
-                <Grid item xs={12}>
-                  <Autocomplete
-                    options={safeArray(masterKaryawan)}
-                    getOptionLabel={(option) => option?.nmkaryawan || ""}
-                    value={
-                      safeArray(masterKaryawan).find(
-                        (emp) => emp.idkaryawan === draft?.idkaryawan
-                      ) || null
-                    }
-                    onChange={(_, newValue) =>
-                      setDraft((prev) => ({
-                        ...prev,
-                        idkaryawan: newValue?.idkaryawan,
-                      }))
-                    }
-                    renderInput={(params) => (
-                      <TextField {...params} label="Nama Teknisi" fullWidth />
-                    )}
-                  />
-                </Grid>
+              {watch("kdtindakan") && (
+                <>
+                  <Grid item xs={12}>
+                    <Typography variant="h6" fontWeight="bold">
+                      Teknisi
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Controller
+                      name="idkaryawan"
+                      control={control}
+                      rules={{ required: "Teknisi wajib dipilih" }}
+                      render={({ field }) => (
+                        <Autocomplete
+                          options={safeArray(masterKaryawan)}
+                          getOptionLabel={(option) => option?.nmkaryawan || ""}
+                          value={
+                            safeArray(masterKaryawan).find(
+                              (emp) => emp.idkaryawan === field.value
+                            ) || null
+                          }
+                          onChange={(_, newValue) => {
+                            field.onChange(newValue?.idkaryawan || "");
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Nama Teknisi"
+                              fullWidth
+                              error={Boolean(errors.idkaryawan)}
+                              helperText={errors.idkaryawan?.message}
+                            />
+                          )}
+                        />
+                      )}
+                    />
+                  </Grid>
+                </>
               )}
 
-              {/* Pemasangan */}
-              {["01", "04"].includes(draft?.kdtindakan) && (
+              {["01", "04"].includes(watch("kdtindakan")) && (
                 <>
                   <Grid item xs={12}>
                     <Typography variant="h6" fontWeight="bold">
                       Pemasangan
                     </Typography>
                   </Grid>
+
+                  {/* Tarif Per Gigi */}
                   <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <FormLabel>Tarif Per Gigi</FormLabel>
-                      <RadioGroup
-                        row
-                        value={draft?.tarif || ""}
-                        onChange={handleTarifChange}
-                      >
-                        <FormControlLabel
-                          control={<Radio />}
-                          value="40000"
-                          label="40.000"
-                        />
-                        <FormControlLabel
-                          control={<Radio />}
-                          value="60000"
-                          label="60.000"
-                        />
-                        <FormControlLabel
-                          control={<Radio />}
-                          value="160000"
-                          label="160.000"
-                        />
-                      </RadioGroup>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Autocomplete
-                      options={Array.from({ length: 28 }, (_, i) => i + 1)}
-                      getOptionLabel={(opt) => String(opt)}
-                      value={draft?.jml_gigi || null}
-                      onChange={(_, newValue) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          jml_gigi: newValue || "",
-                        }))
-                      }
-                      renderInput={(params) => (
-                        <TextField {...params} label="Jumlah Gigi" fullWidth />
+                    <Controller
+                      name="tarif"
+                      control={control}
+                      rules={{ required: "Tarif per gigi wajib dipilih" }}
+                      render={({ field }) => (
+                        <FormControl fullWidth>
+                          <FormLabel>Tarif Per Gigi</FormLabel>
+                          <RadioGroup
+                            row
+                            {...field}
+                            onChange={(e) => handleTarifChange(e, field)}
+                          >
+                            <FormControlLabel
+                              value={40000}
+                              control={<Radio />}
+                              label="40.000"
+                            />
+                            <FormControlLabel
+                              value={60000}
+                              control={<Radio />}
+                              label="60.000"
+                            />
+                            <FormControlLabel
+                              value={160000}
+                              control={<Radio />}
+                              label="160.000"
+                            />
+                          </RadioGroup>
+                        </FormControl>
                       )}
                     />
                   </Grid>
+
+                  {/* Jumlah Gigi */}
+                  <Grid item xs={12}>
+                    <Controller
+                      name="jml_gigi"
+                      control={control}
+                      rules={{ required: "Jumlah gigi wajib dipilih" }}
+                      render={({ field }) => (
+                        <Autocomplete
+                          options={Array.from({ length: 28 }, (_, i) => i + 1)}
+                          getOptionLabel={(opt) => String(opt)}
+                          value={field.value || null}
+                          onChange={(_, newValue) =>
+                            field.onChange(newValue || null)
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Jumlah Gigi"
+                              fullWidth
+                              error={!!errors.jml_gigi}
+                              helperText={errors.jml_gigi?.message}
+                            />
+                          )}
+                        />
+                      )}
+                    />
+                  </Grid>
+
+                  {/* Shift */}
                   <Grid item xs={12} sm={4}>
-                    <Autocomplete
-                      options={safeArray(masterShift)}
-                      getOptionLabel={(opt) => opt?.nmshift || ""}
-                      value={
-                        safeArray(masterShift).find(
-                          (item) => item.kdshift == draft?.kdshift
-                        ) || null
-                      }
-                      onChange={(_, newValue) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          kdshift: String(newValue?.kdshift),
-                        }))
-                      }
-                      renderInput={(params) => (
-                        <TextField {...params} label="Jam Layanan" fullWidth />
+                    <Controller
+                      name="kdshift"
+                      control={control}
+                      rules={{ required: "Shift wajib dipilih" }}
+                      render={({ field }) => (
+                        <Autocomplete
+                          options={safeArray(masterShift)}
+                          getOptionLabel={(opt) => opt?.nmshift || ""}
+                          value={
+                            safeArray(masterShift).find(
+                              (item) => item.kdshift == field.value
+                            ) || null
+                          }
+                          onChange={(_, newValue) => {
+                            field.onChange(String(newValue?.kdshift));
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Jam Layanan"
+                              fullWidth
+                              error={!!errors.kdshift}
+                              helperText={errors.kdshift?.message}
+                            />
+                          )}
+                        />
                       )}
                     />
                   </Grid>
+
+                  {/* Komisi - read only */}
                   <Grid item xs={6} sm={4}>
                     <TextField
                       label="Kolektif"
@@ -349,60 +419,92 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
               )}
 
               {/* Perbaikan */}
-              {["03", "04"].includes(draft?.kdtindakan) && (
+              {["03", "04"].includes(watch("kdtindakan")) && (
                 <>
                   <Grid item xs={12}>
                     <Typography variant="h6" fontWeight="bold">
                       Perbaikan
                     </Typography>
                   </Grid>
+
+                  {/* Shift */}
                   <Grid item xs={12}>
-                    <Autocomplete
-                      options={safeArray(masterShift)}
-                      getOptionLabel={(opt) => opt?.nmshift || ""}
-                      value={
-                        safeArray(masterShift).find(
-                          (item) => item.kdshift == draft?.kdshift
-                        ) || null
-                      }
-                      onChange={(_, newValue) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          kdshift: String(newValue?.kdshift),
-                        }))
-                      }
-                      renderInput={(params) => (
-                        <TextField {...params} label="Jam Layanan" fullWidth />
+                    <Controller
+                      name="kdshift"
+                      control={control}
+                      rules={{ required: "Jam layanan wajib dipilih" }}
+                      render={({ field }) => (
+                        <Autocomplete
+                          options={safeArray(masterShift)}
+                          getOptionLabel={(opt) => opt?.nmshift || ""}
+                          value={
+                            safeArray(masterShift).find(
+                              (item) => item.kdshift == field.value
+                            ) || null
+                          }
+                          onChange={(_, newValue) =>
+                            field.onChange(newValue?.kdshift)
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Jam Layanan"
+                              fullWidth
+                              error={!!errors.kdshift}
+                              helperText={errors.kdshift?.message}
+                            />
+                          )}
+                        />
                       )}
                     />
                   </Grid>
+
+                  {/* Biaya Perbaikan */}
                   <Grid item xs={12}>
                     <FormControl fullWidth>
                       <FormLabel>Biaya Perbaikan</FormLabel>
                       <Stack direction="row" spacing={2}>
-                        <RadioGroup
-                          row
-                          value={draft?.biaya_perbaikan || ""}
-                          onChange={handleBiayaPerbaikanChange}
-                        >
-                          {[30000, 50000, 80000, 100000].map((val) => (
-                            <FormControlLabel
-                              key={val}
-                              control={<Radio />}
-                              value={val}
-                              label={formatCurrency(val)}
+                        {/* Radio Buttons for Biaya */}
+                        <Controller
+                          name="biaya_perbaikan"
+                          control={control}
+                          render={({ field }) => (
+                            <RadioGroup
+                              row
+                              {...field}
+                              onChange={(e) =>
+                                handleBiayaPerbaikanChange(e, field)
+                              }
+                            >
+                              {[30000, 50000, 80000, 100000].map((val) => (
+                                <FormControlLabel
+                                  key={val}
+                                  control={<Radio />}
+                                  value={val}
+                                  label={formatCurrency(val)}
+                                />
+                              ))}
+                            </RadioGroup>
+                          )}
+                        />
+
+                        {/* TextField for Custom Biaya */}
+                        <Controller
+                          name="biaya_perbaikan_custom"
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              label="Harga"
+                              variant="standard"
+                              value={
+                                field.value ? formatCurrency(field.value) : ""
+                              }
+                              onChange={(e) =>
+                                handleBiayaPerbaikanChange(e, field)
+                              }
                             />
-                          ))}
-                        </RadioGroup>
-                        <TextField
-                          label="Harga"
-                          variant="standard"
-                          value={
-                            draft?.biaya_perbaikan
-                              ? formatCurrency(draft.biaya_perbaikan)
-                              : ""
-                          }
-                          onChange={handleBiayaPerbaikanChange}
+                          )}
                         />
                       </Stack>
                     </FormControl>
@@ -411,115 +513,84 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
               )}
             </Grid>
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Grid container spacing={2} p={2}>
-            <Grid item xs={12}>
-              <TableContainer component={Paper} sx={{ mt: 2 }}>
-                <Table>
-                  <TableBody>
-                    {/* Tampilkan hanya jika ada DP */}
-                    {draft?.kdtindakan !== "03" && dpAmount > 0 && (
-                      <>
-                        <TableRow>
-                          <TableCell>
-                            <Typography>Total Sebelum DP</Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography>
-                              {formatCurrency(totalBiaya)}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <Typography>
-                              Deposit di tanggal{" "}
-                              {moment(deposit.data?.tanggal).format(
-                                "DD/MM/YYYY"
-                              )}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography>
-                              - {formatCurrency(dpAmount)}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      </>
-                    )}
+        </form>
+      </DialogContent>
+      <DialogActions>
+        <Grid container spacing={2} p={2}>
+          <Grid item xs={12}>
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableBody>
+                  {/* Tampilkan hanya jika ada DP */}
+                  {watch("kdtindakan") !== "03" && dpAmount > 0 && (
+                    <>
+                      <TableRow>
+                        <TableCell>
+                          <Typography>Total Sebelum DP</Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography>{formatCurrency(totalBiaya)}</Typography>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <Typography>
+                            Deposit di tanggal{" "}
+                            {moment(deposit.data?.tanggal).format("DD/MM/YYYY")}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography>- {formatCurrency(dpAmount)}</Typography>
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  )}
 
-                    {/* Total Akhir selalu ditampilkan */}
-                    <TableRow>
-                      <TableCell>
-                        <Typography fontWeight="bold">Total Akhir</Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography fontWeight="bold">
-                          {formatCurrency(totalSetelahDP)}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Grid>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button variant="contained" onClick={onClose} color="secondary">
-                  Tutup
-                </Button>
-                <Button
-                  onClick={handleUpdateQueue}
-                  color="primary"
-                  variant="contained"
-                  disabled={mutation.isLoading}
-                >
-                  {mutation.isLoading ? "Menambahkan..." : "Simpan"}
-                </Button>
-                {isPrintable && (
-                  <Button
-                    loading={isFetching}
-                    onClick={handlePrintInvoice}
-                    color="success"
-                    variant="contained"
-                    disabled={!isPrintable}
-                    startIcon={<Print />}
-                  >
-                    Cetak Kwitansi
-                  </Button>
-                )}
-              </Box>
-            </Grid>
+                  {/* Total Akhir selalu ditampilkan */}
+                  <TableRow>
+                    <TableCell>
+                      <Typography fontWeight="bold">Total Akhir</Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography fontWeight="bold">
+                        {formatCurrency(totalSetelahDP)}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Grid>
-        </DialogActions>
-      </Dialog>
-
-      {/* Dialog Preview PDF */}
-      <Dialog
-        open={dialog === PRINT}
-        onClose={handleDialogClose}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>Cetak Kwitansi</DialogTitle>
-        <IconButton
-          aria-label="close"
-          onClick={handleDialogClose}
-          sx={(theme) => ({
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          })}
-        >
-          <Close />
-        </IconButton>
-        <DialogContent>
-          <Pdf pdfURL={pdfURL} title="Kwitansi" />
-        </DialogContent>
-      </Dialog>
-    </>
+          <Grid item xs={12}>
+            <Box display="flex" justifyContent="flex-end" gap={2}>
+              <Button variant="contained" onClick={onClose} color="secondary">
+                Tutup
+              </Button>
+              <Button
+                onClick={handleSubmit(handleUpdateQueue)}
+                color="primary"
+                variant="contained"
+                disabled={mutation.isLoading}
+              >
+                {mutation.isLoading ? "Menambahkan..." : "Simpan"}
+              </Button>
+              {isPrintable && (
+                <Button
+                  loading={isFetching}
+                  onClick={handlePrintInvoice}
+                  color="success"
+                  variant="contained"
+                  disabled={!isPrintable}
+                  startIcon={<Print />}
+                >
+                  Cetak Kwitansi
+                </Button>
+              )}
+            </Box>
+          </Grid>
+        </Grid>
+      </DialogActions>
+    </Dialog>
   );
 };
 

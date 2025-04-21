@@ -9,6 +9,6 @@ export const useFetchMasterPelayanan = () => {
         `${import.meta.env.VITE_API_BASE_URL
         }/pelayanan`
       ),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
   });
 };

@@ -33,7 +33,6 @@ const SummaryEarning = () => {
     date.format("YYYY"),
     date.format("M")
   );
-  console.log("🚀 ~ SummaryEarning ~ data:", data);
 
   const totalPemasangan = safeArray(data?.rekap).reduce(
     (sum, item) => sum + item.total_pemasangan,

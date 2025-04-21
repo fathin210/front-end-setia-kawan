@@ -1,63 +1,73 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteFetcher, postFetcher, putFetcher } from "../utils/fetcher";
-import useSnackbarStore from "../store/snackbarStore";
+import useAlertStore from "../store/alertStore";
 
 const baseURL = `${import.meta.env.VITE_API_BASE_URL}/dp`;
 
 export const useCreateDeposit = () => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
 
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload) => postFetcher(baseURL, payload),
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["deposit"]);
-      showSnackbar("Data deposit berhasil diinputkan", "success");
+      queryClient.refetchQueries({
+        queryKey: ["deposit"],
+        type: 'all',
+      });
+      showAlert("Data deposit berhasil diinputkan", "success");
     },
     onError: () => {
-      showSnackbar("Gagal menyimpan data deposit!", "error");
+      showAlert("Gagal menyimpan data deposit!", "error");
     }
   });
 };
 
 export const useUpdateDeposit = () => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
+
 
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ iddp, ...payload }) => putFetcher(`${baseURL}/${iddp}`, payload),
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["deposit"]);
-      showSnackbar("Edit data deposit berhasil disimpan", "success");
+      queryClient.refetchQueries({
+        queryKey: ["deposit"],
+        type: 'all',
+      });
+      showAlert("Edit data deposit berhasil disimpan", "success");
     },
     onError: () => {
-      showSnackbar("Gagal mengedit data deposit!", "error");
+      showAlert("Gagal mengedit data deposit!", "error");
     }
   });
 };
 
 export const useDeleteDeposit = () => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
 
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ iddp }) => deleteFetcher(`${baseURL}/${iddp}`),
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["deposit"]);
-      showSnackbar("Hapus data deposit berhasil disimpan", "success");
+      queryClient.refetchQueries({
+        queryKey: ["deposit"],
+        type: 'all',
+      });
+      showAlert("Hapus data deposit berhasil disimpan", "success");
     },
     onError: () => {
-      showSnackbar("Gagal menghapus data deposit!", "error");
+      showAlert("Gagal menghapus data deposit!", "error");
     }
   });
 };

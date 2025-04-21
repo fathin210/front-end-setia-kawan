@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { postFetcher, putFetcher } from "../utils/fetcher";
+import { deleteFetcher, postFetcher, putFetcher } from "../utils/fetcher";
 import moment from "moment";
-import useSnackbarStore from "../store/snackbarStore";
+import useAlertStore from "../store/alertStore";
 
 const baseURL = `${import.meta.env.VITE_API_BASE_URL}/daftar`
 
 export const useAddToQueueMutation = (onComplete) => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -16,6 +16,7 @@ export const useAddToQueueMutation = (onComplete) => {
         nmpasien: data.nmpasien,
         tanggal: data?.tanggal ? data.tanggal : moment().format("YYYY-MM-DD"),
         tanggal_pelaks: moment(data?.tanggal_pelaks).format("YYYY-MM-DD"),
+        idkaryawan: data?.idkaryawan || null,
         tgl_lahir: data.tgl_lahir,
         jml_gigi: 0,
         tarif: 0,
@@ -33,23 +34,23 @@ export const useAddToQueueMutation = (onComplete) => {
       });
     },
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["listQueue"]);
-      showSnackbar("Pasien berhasil ditambahkan ke antrian!", "success");
+      showAlert("Pasien berhasil ditambahkan ke antrian!", "success");
       onComplete && onComplete()
     },
     onError: (error) => {
       console.error("Error:", error);
-      showSnackbar("Gagal menambahkan pasien ke antrian!", "error");
+      showAlert("Gagal menambahkan pasien ke antrian!", "error");
     },
   });
 };
 
 
 export const useClearQueueMutation = ({ onComplete }) => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -78,26 +79,27 @@ export const useClearQueueMutation = ({ onComplete }) => {
         idkaryawan: null,
         jam: null,
         kdshift: null,
-        batal_dp: true
+        batal_dp: true,
+        status: null
       });
     },
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["listQueue"]);
-      showSnackbar("Data rincian berhasil diclear!", "success");
+      showAlert("Data rincian berhasil diclear!", "success");
       onComplete && onComplete()
     },
     onError: (error) => {
       console.error("Error:", error);
-      showSnackbar("Gagal clear data rincian!", "error");
+      showAlert("Gagal clear data rincian!", "error");
     },
   });
 };
 
 export const useUpdateQueue = (onComplete = () => { }) => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -105,16 +107,35 @@ export const useUpdateQueue = (onComplete = () => { }) => {
       return await putFetcher(`${baseURL}/${data.id}`, data);
     },
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["listQueue"]);
-      showSnackbar("Data rincian berhasil diupdate!", "success");
+      showAlert("Data rincian berhasil diupdate!", "success");
       onComplete && onComplete()
     },
     onError: (error) => {
       console.error("Error:", error);
-      showSnackbar("Gagal mengupdate data rincian!", "error");
+      showAlert("Gagal mengupdate data rincian!", "error");
     },
+  });
+};
+
+export const useDeleteQueue = () => {
+  const { showAlert } = useAlertStore.getState();
+
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => deleteFetcher(`${baseURL}/${id}`),
+    onMutate: () => {
+      showAlert("Memproses permintaan...", "waiting");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["listQueue"]);
+      showAlert("Hapus data rincian berhasil disimpan", "success");
+    },
+    onError: () => {
+      showAlert("Gagal menghapus data rincian!", "error");
+    }
   });
 };

@@ -9,7 +9,7 @@ export const useFetchRekapPendapatan = (periode, tahun, bulan) => {
         `${import.meta.env.VITE_API_BASE_URL
         }/rekap?periode=${periode}&tahun=${tahun}&bulan=${bulan}`
       ),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
   });
 };
 
@@ -19,6 +19,6 @@ export const useFetchDashboard = () => {
     queryKey: ["summaryQueue",],
     queryFn: () =>
       fetcher(`${import.meta.env.VITE_API_BASE_URL}/rekap/dashboard`),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
   });
 };

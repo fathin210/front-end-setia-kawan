@@ -19,6 +19,7 @@ import {
   IconButton,
   Stack,
   Avatar,
+  Button,
 } from "@mui/material";
 import moment from "moment";
 import { Edit, Person } from "@mui/icons-material";
@@ -26,6 +27,8 @@ import { formatCurrency } from "../../../utils/common";
 import useListQueue from "../../../hooks/useListQueue";
 import DialogPatientForm from "../../home/DialogPatientForm";
 import usePatientStore from "../../../store/patientStore";
+import { ADD_QUEUE, EDIT_PATIENT } from "../../../constants/variables";
+import DialogQueue from "../../home/DialogQueue";
 
 const DetailPatient = () => {
   const { activePatient } = usePatientStore();
@@ -101,9 +104,21 @@ const DetailPatient = () => {
               </Grid>
             </Grid>
             {/* Tombol Edit */}
-            <IconButton color="primary" onClick={() => handleDialog(true)}>
-              <Edit />
-            </IconButton>
+            <Stack gap={2}>
+              <Button
+                variant="contained"
+                onClick={() => handleDialog(EDIT_PATIENT)}
+              >
+                Ubah Data Pasien
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => handleDialog(ADD_QUEUE)}
+              >
+                Tambahkan ke antrian
+              </Button>
+            </Stack>
           </Stack>
         </CardContent>
       </Card>
@@ -111,7 +126,7 @@ const DetailPatient = () => {
       {/* RINCIAN PELAYANAN */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-          Rincian Pelayanan
+          Riwayat Rincian Pelayanan
         </Typography>
         <Divider sx={{ my: 2 }} />
       </Box>
@@ -190,12 +205,19 @@ const DetailPatient = () => {
         )
       )}
 
-      {dialog && (
+      {dialog === EDIT_PATIENT && (
         <DialogPatientForm
-          isOpen={dialog}
+          isOpen={true}
           editData={activePatient}
           handleDialog={handleDialog}
           refetch={refetch}
+        />
+      )}
+      {dialog === ADD_QUEUE && (
+        <DialogQueue
+          isOpen={true}
+          patient={activePatient}
+          onClose={() => handleDialog(false)}
         />
       )}
     </Container>

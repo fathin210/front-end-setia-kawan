@@ -8,6 +8,9 @@ import { darkTheme, lightTheme } from "./theme";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { routes } from "./routes";
+import ProtectedRoute from "./components/ProtectedRoute";
+import ROUTES from "./constants/routes";
+import Login from "./pages/login/Login";
 
 const App = () => {
   const { darkMode } = useThemeStore();
@@ -18,6 +21,7 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <Router>
           <Routes>
+          <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path="/" element={<Layout />}>
               {routes.map((route, index) =>
                 route.children ? (
@@ -25,14 +29,30 @@ const App = () => {
                     <Route
                       key={childIndex}
                       path={child.path}
-                      element={child.element}
+                      element={
+                        child.roles && child.roles.length > 0 ? (
+                          <ProtectedRoute allowedRoles={child.roles}>
+                            {child.element}
+                          </ProtectedRoute>
+                        ) : (
+                          child.element
+                        )
+                      }
                     />
                   ))
                 ) : (
                   <Route
                     key={index}
                     path={route.path}
-                    element={route.element}
+                    element={
+                      route.roles && route.roles.length > 0 ? (
+                        <ProtectedRoute allowedRoles={route.roles}>
+                          {route.element}
+                        </ProtectedRoute>
+                      ) : (
+                        route.element
+                      )
+                    }
                   />
                 )
               )}

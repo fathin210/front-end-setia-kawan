@@ -12,9 +12,10 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
+import { useForm, Controller } from "react-hook-form";
 import { useSubmitPatient } from "../../hooks/useMutatePatient";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
 
@@ -22,46 +23,64 @@ const initialState = {
   nomorpasien: null,
   tgl_input: moment().format("YYYY-MM-DD"),
   noktp: null,
-  nmpasien: null,
-  temp_lahir: null,
+  nmpasien: "",
+  temp_lahir: "",
   tgl_lahir: null,
   status: null,
-  jnskel: null,
+  jnskel: "",
   nama_ortu: null,
   gol_darah: null,
-  alamat: null,
-  telp: null,
+  alamat: "",
+  telp: "",
 };
 
 const DialogPatientForm = ({ isOpen, handleDialog, editData }) => {
-  const [draft, setDraft] = useState(initialState);
+  const { mutateAsync: addToQueue } = useAddToQueueMutation();
 
-  useEffect(() => {
-    if (editData) {
-      setDraft(editData);
-    } else {
-      setDraft(initialState);
-    }
-  }, [editData]);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: initialState,
+  });
 
-  const handleChange = (event) =>
-    setDraft({ ...draft, [event.target.name]: event.target.value });
-
-  const { mutateAsync: addToQueue } = useAddToQueueMutation(() =>
-    handleDialog(false)
-  );
-
-  const { mutateAsync, isPending } = useSubmitPatient({
+  const { mutateAsync } = useSubmitPatient({
     editData,
     onComplete: async (data) => {
       try {
-        await addToQueue(data);
-        setDraft(initialState);
+        if (!editData) {
+          await addToQueue(data);
+        }
+        reset(initialState);
+        handleDialog(false);
       } catch (error) {}
     },
   });
 
-  const handleSubmit = () => mutateAsync(draft);
+  useEffect(() => {
+    if (editData) {
+      const formatted = {
+        ...editData,
+        tgl_lahir: editData.tgl_lahir ? moment(editData.tgl_lahir) : null,
+      };
+      reset(formatted);
+    } else {
+      reset(initialState);
+    }
+  }, [editData, reset]);
+
+  const onSubmit = async (data) => {
+    const payload = {
+      ...data,
+      tgl_lahir: data.tgl_lahir
+        ? moment(data.tgl_lahir).format("YYYY-MM-DD")
+        : null,
+    };
+    await mutateAsync(payload);
+  };
 
   return (
     <Dialog maxWidth="md" fullWidth open={isOpen}>
@@ -69,102 +88,129 @@ const DialogPatientForm = ({ isOpen, handleDialog, editData }) => {
         {editData ? "Edit Data Pasien" : "Registrasi Pasien Baru"}
       </DialogTitle>
       <DialogContent>
-        <Stack gap={3}>
-          <TextField
-            autoComplete="off"
-            value={draft?.nmpasien || ""}
-            label="Nama Pasien"
-            placeholder="Masukkan nama pasien"
-            variant="standard"
-            fullWidth
-            name="nmpasien"
-            onChange={handleChange}
-          />
-          <Stack direction="row" justifyContent="space-between" gap={4}>
-            <TextField
-              autoComplete="off"
-              value={draft?.temp_lahir || ""}
-              label="Tempat Lahir"
-              placeholder="Masukkan Tempat Lahir"
-              variant="standard"
-              sx={{ flex: 1 }}
-              name="temp_lahir"
-              onChange={handleChange}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Stack gap={3}>
+            <Controller
+              name="nmpasien"
+              control={control}
+              rules={{ required: "Nama pasien wajib diisi" }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Nama Pasien"
+                  placeholder="Masukkan nama pasien"
+                  fullWidth
+                  error={!!errors.nmpasien}
+                  helperText={errors.nmpasien?.message}
+                />
+              )}
             />
-            <DesktopDatePicker
-              sx={{ flex: 1 }}
-              format="DD/MM/YYYY"
-              label="Tanggal Lahir"
-              name="tgl_lahir"
-              value={draft?.tgl_lahir ? moment(draft.tgl_lahir) : null}
-              onChange={(value) =>
-                setDraft({ ...draft, tgl_lahir: value.format("YYYY-MM-DD") })
-              }
-              slotProps={{
-                actionBar: {
-                  actions: ["today"],
-                },
-              }}
+
+            <Stack direction="row" justifyContent="space-between" gap={4}>
+              <Controller
+                name="temp_lahir"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Tempat Lahir"
+                    placeholder="Masukkan Tempat Lahir"
+                    sx={{ flex: 1 }}
+                  />
+                )}
+              />
+              <Controller
+                name="tgl_lahir"
+                control={control}
+                render={({ field }) => (
+                  <DesktopDatePicker
+                    {...field}
+                    label="Tanggal Lahir"
+                    format="DD/MM/YYYY"
+                    value={field.value || null}
+                    onChange={(date) => field.onChange(date)}
+                    sx={{ flex: 1 }}
+                    slotProps={{
+                      actionBar: { actions: ["today"] },
+                    }}
+                  />
+                )}
+              />
+            </Stack>
+
+            <Controller
+              name="alamat"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Alamat"
+                  placeholder="Masukkan Alamat"
+                  fullWidth
+                />
+              )}
+            />
+
+            <FormControl error={!!errors.jnskel}>
+              <FormLabel>Jenis Kelamin</FormLabel>
+              <Controller
+                name="jnskel"
+                control={control}
+                rules={{ required: "Jenis kelamin wajib dipilih" }}
+                render={({ field }) => (
+                  <RadioGroup row {...field}>
+                    <FormControlLabel
+                      value="L"
+                      control={<Radio />}
+                      label="Laki-laki"
+                    />
+                    <FormControlLabel
+                      value="P"
+                      control={<Radio />}
+                      label="Perempuan"
+                    />
+                  </RadioGroup>
+                )}
+              />
+              {errors.jnskel && (
+                <p style={{ color: "red", fontSize: 12 }}>
+                  {errors.jnskel.message}
+                </p>
+              )}
+            </FormControl>
+
+            <Controller
+              name="telp"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="No. Telepon / HP"
+                  placeholder="Masukkan Nomor Telepon"
+                  type="tel"
+                  fullWidth
+                />
+              )}
             />
           </Stack>
-          <TextField
-            autoComplete="off"
-            value={draft?.alamat}
-            label="Alamat"
-            placeholder="Masukkan Alamat"
-            variant="standard"
-            fullWidth
-            name="alamat"
-            onChange={handleChange}
-          />
-          <FormControl>
-            <FormLabel>Jenis Kelamin</FormLabel>
-            <RadioGroup
-              value={draft?.jnskel}
-              row
-              name="jnskel"
-              onChange={handleChange}
+
+          <DialogActions sx={{ mt: 4 }}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => {
+                handleDialog(null);
+                reset(initialState);
+              }}
             >
-              <FormControlLabel
-                value="L"
-                control={<Radio />}
-                label="Laki-laki"
-              />
-              <FormControlLabel
-                value="P"
-                control={<Radio />}
-                label="Perempuan"
-              />
-            </RadioGroup>
-          </FormControl>
-          <TextField
-            autoComplete="off"
-            value={draft?.telp}
-            name="telp"
-            onChange={handleChange}
-            label="No. Telepon / HP"
-            placeholder="Masukkan Nomor Telepon"
-            variant="standard"
-            type="tel"
-            fullWidth
-          />
-        </Stack>
+              Tutup
+            </Button>
+            <Button variant="contained" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Menyimpan..." : editData ? "Perbarui" : "Simpan"}
+            </Button>
+          </DialogActions>
+        </form>
       </DialogContent>
-      <DialogActions>
-        <Button
-          variant="contained"
-          color="error"
-          onClick={() => {
-            handleDialog(null);
-            setDraft(initialState);
-          }}
-        >
-          Tutup
-        </Button>
-        <Button variant="contained" onClick={handleSubmit} disabled={isPending}>
-          {isPending ? "Menyimpan..." : editData ? "Perbarui" : "Simpan"}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

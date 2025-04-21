@@ -1,63 +1,63 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteFetcher, postFetcher, putFetcher } from "../utils/fetcher";
-import useSnackbarStore from "../store/snackbarStore";
+import useAlertStore from "../store/alertStore";
 
 const baseURL = `${import.meta.env.VITE_API_BASE_URL}/karyawan`;
 
 export const useCreateKaryawan = () => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
 
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload) => postFetcher(baseURL, payload),
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["karyawan"]);
-      showSnackbar("Data karyawan berhasil diinputkan", "success");
+      showAlert("Data karyawan berhasil diinputkan", "success");
     },
     onError: () => {
-      showSnackbar("Gagal menyimpan data karyawan!", "error");
+      showAlert("Gagal menyimpan data karyawan!", "error");
     }
   });
 };
 
 export const useUpdateKaryawan = () => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
 
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ idkaryawan, ...payload }) => putFetcher(`${baseURL}/${idkaryawan}`, payload),
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["karyawan"]);
-      showSnackbar("Edit data karyawan berhasil disimpan", "success");
+      showAlert("Edit data karyawan berhasil disimpan", "success");
     },
     onError: () => {
-      showSnackbar("Gagal mengedit data karyawan!", "error");
+      showAlert("Gagal mengedit data karyawan!", "error");
     }
   });
 };
 
 export const useDeleteKaryawan = () => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
 
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (idkaryawan) => deleteFetcher(`${baseURL}/${idkaryawan}`),
     onMutate: () => {
-      showSnackbar("Memproses permintaan...", "info");
+      showAlert("Memproses permintaan...", "waiting");
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["karyawan"]);
-      showSnackbar("Hapus data karyawan berhasil disimpan", "success");
+      showAlert("Hapus data karyawan berhasil disimpan", "success");
     },
     onError: () => {
-      showSnackbar("Gagal menghapus data karyawan!", "error");
+      showAlert("Gagal menghapus data karyawan!", "error");
     }
   });
 };

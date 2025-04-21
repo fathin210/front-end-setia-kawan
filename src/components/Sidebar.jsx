@@ -13,7 +13,8 @@ import {
   Collapse,
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { routes } from "../routes.jsx";
+import { filterRoutesByRole, routes } from "../routes.jsx";
+import { useAuthStore } from "../store/useAuthStore.js";
 
 const drawerWidth = 220;
 const collapsedWidth = 72;
@@ -44,6 +45,13 @@ const DrawerStyled = styled(Drawer)(({ theme, open }) => ({
 const Sidebar = ({ open, hover, setHover }) => {
   const location = useLocation();
   const [openSubmenus, setOpenSubmenus] = useState({});
+  const { user } = useAuthStore();
+
+  const role = user?.level; // contoh: 'admin' atau 'user'
+  const allowedRoutes = filterRoutesByRole(routes, role);
+  const visibleRoutes = allowedRoutes.filter(
+    (route) => route.showInSidebar !== false
+  );
 
   useEffect(() => {
     const activeSubmenus = {};
@@ -72,7 +80,7 @@ const Sidebar = ({ open, hover, setHover }) => {
       <Toolbar />
       <Divider />
       <List>
-        {routes.map((route) => {
+        {visibleRoutes.map((route) => {
           const isActive = location.pathname === route.path;
           return (
             <React.Fragment key={route.text}>

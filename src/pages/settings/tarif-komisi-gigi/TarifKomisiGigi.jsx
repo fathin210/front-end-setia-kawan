@@ -240,7 +240,7 @@ const TarifKomisiGigi = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Batal</Button>
+          <Button onClick={handleClose}>Tutup</Button>
           <Button variant="contained" onClick={handleSubmit}>
             Simpan
           </Button>

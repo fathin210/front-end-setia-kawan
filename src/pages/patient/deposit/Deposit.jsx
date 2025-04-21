@@ -9,8 +9,6 @@ import {
   TableRow,
   Paper,
   Stack,
-  TableFooter,
-  useTheme,
   CircularProgress,
   Alert,
   Tabs,
@@ -22,30 +20,29 @@ import {
   DialogTitle,
   DialogActions,
   Button,
-  DialogContent,
 } from "@mui/material";
 import React, { useState } from "react";
 import moment from "moment";
 import { DatePicker, DesktopDatePicker } from "@mui/x-date-pickers";
 import { safeArray } from "../../../utils/common";
 import { useFetchDeposit } from "../../../hooks/useFetchDeposit";
-import { Close, Delete, Edit, MoreVert, Print } from "@mui/icons-material";
+import { Delete, Edit, MoreVert, Print } from "@mui/icons-material";
 import DialogDeposit from "../../home/DialogDeposit";
-import { CONFIRM_DELETE, DEPOSIT, PRINT } from "../../../constants/variables";
+import { CONFIRM_DELETE, DEPOSIT } from "../../../constants/variables";
 import { useDeleteDeposit } from "../../../hooks/useMutateDeposit";
 import { useFetchPDFDeposit } from "../../../hooks/useFetchPDFDeposit";
-import Pdf from "../../../components/Pdf";
+import usePdfStore from "../../../store/pdfStore";
 
 const Deposit = () => {
   const { data, error, isLoading } = useFetchDeposit();
   const deleteMutation = useDeleteDeposit();
+  const { openDialog, setPdfURL, setLoading, setError } = usePdfStore();
 
   const [mode, setMode] = useState("harian");
   const [date, setDate] = useState(moment());
   const [anchorEl, setAnchorEl] = useState(null);
   const [dialog, setDialog] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
-  const [pdfURL, setPdfURL] = useState("");
 
   const { isFetching, refetch } = useFetchPDFDeposit(selectedData?.iddp);
 
@@ -79,11 +76,17 @@ const Deposit = () => {
   };
 
   const handlePrintDeposit = async () => {
-    const { data } = await refetch();
-    if (data) {
-      const url = URL.createObjectURL(data);
-      setPdfURL(url);
-      setDialog(PRINT);
+    try {
+      openDialog("Kwitansi Deposit");
+      setLoading(true);
+      const { data } = await refetch({ iddp: selectedData?.iddp });
+      if (data) {
+        const url = URL.createObjectURL(data);
+        setPdfURL(url);
+        setLoading(false);
+      }
+    } catch (error) {
+      setError(error?.message);
     }
   };
 
@@ -211,11 +214,11 @@ const Deposit = () => {
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <MenuItem onClick={handleOpenDepositDialog}>
           <Edit fontSize="small" sx={{ mr: 1 }} />
-          Ubah DP
+          Deposit
         </MenuItem>
         <MenuItem onClick={handleOpenConfirmationDialog}>
           <Delete fontSize="small" sx={{ mr: 1 }} />
-          Hapus DP
+          Hapus Deposit
         </MenuItem>
         <MenuItem onClick={handlePrintDeposit} disabled={isFetching}>
           {isFetching ? (
@@ -240,7 +243,7 @@ const Deposit = () => {
           </DialogTitle>
           <DialogActions>
             <Button variant="contained" onClick={handleCloseDialog}>
-              Batal
+              Tutup
             </Button>
             <Button
               variant="contained"
@@ -251,26 +254,6 @@ const Deposit = () => {
               {deleteMutation.isLoading ? "Menghapus..." : "Ya, Hapus"}
             </Button>
           </DialogActions>
-        </Dialog>
-      )}
-      {dialog === PRINT && (
-        <Dialog open onClose={handleCloseDialog} fullWidth maxWidth="md">
-          <DialogTitle>Cetak Kwitansi Deposit</DialogTitle>
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseDialog}
-            sx={(theme) => ({
-              position: "absolute",
-              right: 8,
-              top: 8,
-              color: theme.palette.grey[500],
-            })}
-          >
-            <Close />
-          </IconButton>
-          <DialogContent>
-            <Pdf pdfURL={pdfURL} title="Kwitansi" />
-          </DialogContent>
         </Dialog>
       )}
     </Box>

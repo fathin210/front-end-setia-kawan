@@ -9,6 +9,6 @@ export const useFetchTarifTindakan = () => {
         `${import.meta.env.VITE_API_BASE_URL
         }/tarif-tindakan`
       ),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
   });
 };

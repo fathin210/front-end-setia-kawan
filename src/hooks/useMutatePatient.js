@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { postFetcher, putFetcher } from "../utils/fetcher";
-import useSnackbarStore from "../store/snackbarStore";
 import usePatientStore from "../store/patientStore";
+import useAlertStore from "../store/alertStore";
 
 const baseURL = `${import.meta.env.VITE_API_BASE_URL}/pasien`
 
 export const useSubmitPatient = ({ editData, onComplete }) => {
-  const { showSnackbar } = useSnackbarStore.getState();
+  const { showAlert } = useAlertStore.getState();
   const { updateActivePatient } = usePatientStore.getState();
 
   const queryClient = useQueryClient();
@@ -27,14 +27,12 @@ export const useSubmitPatient = ({ editData, onComplete }) => {
       }
     },
     onMutate: () => {
-      showSnackbar(
+      showAlert(
         editData ? "Memperbarui data pasien..." : "Menyimpan data pasien...",
-        "info"
+        "waiting"
       );
     },
     onSuccess: (response) => {
-      console.log("🚀 ~ useSubmitPatient ~ response:", response)
-
       queryClient.invalidateQueries(["patients"]);
       onComplete && onComplete(response);
 
@@ -43,7 +41,7 @@ export const useSubmitPatient = ({ editData, onComplete }) => {
         updateActivePatient(response.data); // Perbarui state activePatient
       }
 
-      showSnackbar(
+      showAlert(
         editData
           ? "Data pasien berhasil diperbarui!"
           : "Pasien berhasil ditambahkan!",
@@ -51,7 +49,7 @@ export const useSubmitPatient = ({ editData, onComplete }) => {
       );
     },
     onError: () => {
-      showSnackbar("Gagal menyimpan data pasien!", "error");
+      showAlert("Gagal menyimpan data pasien!", "error");
     },
   })
 }

@@ -20,6 +20,7 @@ import Earning from "./pages/earning/earning/Earning";
 import SummaryEarning from "./pages/earning/summary-earning/SummaryEarning";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Deposit from "./pages/patient/deposit/Deposit";
+import Login from "./pages/login/Login";
 
 export const routes = [
   {
@@ -28,6 +29,7 @@ export const routes = [
     text: "Dashboard",
     icon: <DashboardIcon />,
     roles: ["admin"],
+    showInSidebar: true,
   },
   {
     path: ROUTES.HOME,
@@ -35,6 +37,7 @@ export const routes = [
     text: "Home",
     icon: <HomeIcon />,
     roles: ["admin", "user"],
+    showInSidebar: true,
   },
   {
     text: "Pasien",
@@ -47,6 +50,7 @@ export const routes = [
         text: "Detail Pasien",
         icon: <PersonIcon />,
         roles: ["admin", "user"],
+        showInSidebar: true,
       },
       {
         path: ROUTES.DEPOSIT,
@@ -54,8 +58,10 @@ export const routes = [
         text: "Deposit (Uang Muka)",
         icon: <RequestQuote />,
         roles: ["admin", "user"],
+        showInSidebar: true,
       },
     ],
+    showInSidebar: true,
   },
   {
     text: "Karyawan",
@@ -67,16 +73,19 @@ export const routes = [
         element: <AdminEmployee />,
         text: "Daftar Karyawan",
         icon: <People />,
-        roles: ["admin"],
+        roles: ["admin", "user"],
+        showInSidebar: true,
       },
       {
         path: ROUTES.EMPLOYEE_COMMISSIONS,
         element: <Commissions />,
         text: "Laporan Komisi Karyawan",
         icon: <RequestQuote />,
-        roles: ["admin"],
+        roles: ["admin", "user"],
+        showInSidebar: true,
       },
     ],
+    showInSidebar: true,
   },
   {
     text: "Pendapatan",
@@ -89,6 +98,7 @@ export const routes = [
         text: "Pendapatan",
         icon: <MonetizationOn />,
         roles: ["admin"],
+        showInSidebar: true,
       },
       {
         path: ROUTES.REKAP_PENDAPATAN,
@@ -96,8 +106,10 @@ export const routes = [
         text: "Rekap Pendapatan",
         icon: <RequestQuote />,
         roles: ["admin"],
+        showInSidebar: true,
       },
     ],
+    showInSidebar: true,
   },
   {
     text: "Pengaturan",
@@ -110,6 +122,7 @@ export const routes = [
         text: "Tarif dan Komisi 'Per' Gigi",
         icon: <MonetizationOn />,
         roles: ["admin"],
+        showInSidebar: true,
       },
       {
         path: ROUTES.KOMISI_KARYAWAN_PER_SHIFT,
@@ -117,8 +130,17 @@ export const routes = [
         text: "Komisi / Shift",
         icon: <RequestQuote />,
         roles: ["admin"],
+        showInSidebar: true,
       },
     ],
+    showInSidebar: true,
+  },
+  {
+    path: ROUTES.LOGIN,
+    element: <Login />,
+    text: "Login",
+    roles: [],
+    showInSidebar: false,
   },
 ];
 

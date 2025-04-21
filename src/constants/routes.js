@@ -9,6 +9,7 @@ const ROUTES = {
   KOMISI_KARYAWAN_PER_SHIFT: "/settings/komisi-karyawan-shift",
   PENDAPATAN: "/earning/earning",
   REKAP_PENDAPATAN: "/earning/summary-earning",
+  LOGIN: "/login"
 };
 
 export default ROUTES;

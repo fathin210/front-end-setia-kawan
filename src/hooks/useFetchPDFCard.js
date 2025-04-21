@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { getHeaders } from "../utils/fetcher";
 
 export const useFetchPDFCard = (id, { enabled = false } = {}) => {
   return useQuery({
@@ -10,6 +11,7 @@ export const useFetchPDFCard = (id, { enabled = false } = {}) => {
           method: "GET",
           headers: {
             "Content-Type": "application/pdf",
+            ...getHeaders()
           },
         }
       );

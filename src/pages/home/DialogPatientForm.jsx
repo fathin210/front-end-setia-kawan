@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -7,10 +8,12 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
+  IconButton,
   Radio,
   RadioGroup,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
@@ -18,6 +21,7 @@ import moment from "moment";
 import { useForm, Controller } from "react-hook-form";
 import { useSubmitPatient } from "../../hooks/useMutatePatient";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
+import { Close } from "@mui/icons-material";
 
 const initialState = {
   nomorpasien: null,
@@ -56,7 +60,7 @@ const DialogPatientForm = ({ isOpen, handleDialog, editData }) => {
         }
         reset(initialState);
         handleDialog(false);
-      } catch (error) {}
+      } catch (error) { }
     },
   });
 
@@ -87,69 +91,92 @@ const DialogPatientForm = ({ isOpen, handleDialog, editData }) => {
       <DialogTitle>
         {editData ? "Edit Data Pasien" : "Registrasi Pasien Baru"}
       </DialogTitle>
+      <IconButton
+        aria-label="close"
+        color="error"
+        onClick={() => {
+          handleDialog(null);
+          reset(initialState);
+        }}
+        sx={(_) => ({
+          position: "absolute",
+          right: 8,
+          top: 8,
+        })}
+      >
+        <Close color="error" />
+      </IconButton>
       <DialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack gap={3}>
-            <Controller
-              name="nmpasien"
-              control={control}
-              rules={{ required: "Nama pasien wajib diisi" }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Nama Pasien"
-                  placeholder="Masukkan nama pasien"
-                  fullWidth
-                  error={!!errors.nmpasien}
-                  helperText={errors.nmpasien?.message}
-                />
-              )}
-            />
+            <Box>
+              <Typography>Nama Pasien</Typography>
+              <Controller
+                name="nmpasien"
+                control={control}
+                rules={{ required: "Nama pasien wajib diisi" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    placeholder="Masukkan nama pasien"
+                    fullWidth
+                    error={!!errors.nmpasien}
+                    helperText={errors.nmpasien?.message}
+                  />
+                )}
+              />
+            </Box>
 
             <Stack direction="row" justifyContent="space-between" gap={4}>
+              <Box sx={{ flex: 1 }}>
+                <Typography>Tempat Lahir</Typography>
+                <Controller
+                  name="temp_lahir"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      placeholder="Masukkan Tempat Lahir"
+                      fullWidth
+                    />
+                  )}
+                />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography>Tanggal Lahir</Typography>
+                <Controller
+                  name="tgl_lahir"
+                  control={control}
+                  render={({ field }) => (
+                    <DesktopDatePicker
+                      {...field}
+                      format="DD/MM/YYYY"
+                      value={field.value || null}
+                      onChange={(date) => field.onChange(date)}
+                      sx={{ width: "100%" }}
+                      slotProps={{
+                        actionBar: { actions: ["today"] },
+                      }}
+                    />
+                  )}
+                />
+              </Box>
+            </Stack>
+            <Box>
+              <Typography>Tanggal Lahir</Typography>
               <Controller
-                name="temp_lahir"
+                name="alamat"
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Tempat Lahir"
-                    placeholder="Masukkan Tempat Lahir"
-                    sx={{ flex: 1 }}
+                    label="Alamat"
+                    placeholder="Masukkan Alamat"
+                    fullWidth
                   />
                 )}
               />
-              <Controller
-                name="tgl_lahir"
-                control={control}
-                render={({ field }) => (
-                  <DesktopDatePicker
-                    {...field}
-                    label="Tanggal Lahir"
-                    format="DD/MM/YYYY"
-                    value={field.value || null}
-                    onChange={(date) => field.onChange(date)}
-                    sx={{ flex: 1 }}
-                    slotProps={{
-                      actionBar: { actions: ["today"] },
-                    }}
-                  />
-                )}
-              />
-            </Stack>
-
-            <Controller
-              name="alamat"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Alamat"
-                  placeholder="Masukkan Alamat"
-                  fullWidth
-                />
-              )}
-            />
+            </Box>
 
             <FormControl error={!!errors.jnskel}>
               <FormLabel>Jenis Kelamin</FormLabel>
@@ -179,32 +206,24 @@ const DialogPatientForm = ({ isOpen, handleDialog, editData }) => {
               )}
             </FormControl>
 
-            <Controller
-              name="telp"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="No. Telepon / HP"
-                  placeholder="Masukkan Nomor Telepon"
-                  type="tel"
-                  fullWidth
-                />
-              )}
-            />
+            <Box>
+              <Typography>No. Telepon / HP</Typography>
+              <Controller
+                name="telp"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    placeholder="Masukkan Nomor Telepon"
+                    type="tel"
+                    fullWidth
+                  />
+                )}
+              />
+            </Box>
           </Stack>
 
           <DialogActions sx={{ mt: 4 }}>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => {
-                handleDialog(null);
-                reset(initialState);
-              }}
-            >
-              Tutup
-            </Button>
             <Button variant="contained" type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Menyimpan..." : editData ? "Perbarui" : "Simpan"}
             </Button>

@@ -19,6 +19,7 @@ import {
   TableBody,
   Autocomplete,
   TextField,
+  IconButton,
 } from "@mui/material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
@@ -26,6 +27,7 @@ import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
 import useListQueue from "../../hooks/useListQueue";
 import { formatCurrency, safeArray } from "../../utils/common";
 import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
+import { Close } from "@mui/icons-material";
 
 const DialogQueue = ({ isOpen, onClose, patient }) => {
   const {
@@ -52,6 +54,18 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Tambah ke Antrian</DialogTitle>
+      <IconButton
+        aria-label="close"
+        color="error"
+        onClick={onClose}
+        sx={(_) => ({
+          position: "absolute",
+          right: 8,
+          top: 8,
+        })}
+      >
+        <Close color="error" />
+      </IconButton>
       <DialogContent>
         <Stack spacing={2}>
           <Typography variant="body1">
@@ -62,6 +76,9 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
           </Typography>
           <Typography variant="body1">
             <strong>Alamat:</strong> {patient?.alamat || "-"}
+          </Typography>
+          <Typography variant="body1">
+            <strong>Tanggal Antrian</strong>
           </Typography>
           <DesktopDatePicker
             sx={{ flex: 1 }}
@@ -82,6 +99,9 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
               },
             }}
           />
+          <Typography variant="body1">
+            <strong>Teknisi</strong>
+          </Typography>
           <Autocomplete
             options={safeArray(masterKaryawan)}
             getOptionLabel={(option) => option?.nmkaryawan || ""}
@@ -183,9 +203,6 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="contained" color="error">
-          Tutup
-        </Button>
         <Button
           onClick={handleAddToQueue}
           color="primary"

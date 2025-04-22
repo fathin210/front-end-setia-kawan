@@ -8,12 +8,16 @@ import {
   Stack,
   Autocomplete,
   TextField,
+  IconButton,
+  FormHelperText,
+  Typography,
 } from "@mui/material";
 import { useUpdateStatus } from "../../hooks/useMutateQueue";
 import { safeArray } from "../../utils/common";
 import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
 import { status } from "../../constants/variables";
 import { Controller, useForm } from "react-hook-form";
+import { Close } from "@mui/icons-material";
 
 const DialogStatus = ({ isOpen, onClose, queue }) => {
   const { data: masterKaryawan } = useFetchKaryawan();
@@ -21,7 +25,9 @@ const DialogStatus = ({ isOpen, onClose, queue }) => {
 
   console.log("queue", queue);
 
-  const { handleSubmit, watch, control } = useForm({
+  const { handleSubmit, watch, control,
+    formState: { errors, isSubmitting },
+  } = useForm({
     defaultValues: {
       ket: null,
       idkaryawan: null,
@@ -40,9 +46,21 @@ const DialogStatus = ({ isOpen, onClose, queue }) => {
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Ubah Status</DialogTitle>
+      <IconButton
+        aria-label="close"
+        onClick={onClose}
+        sx={(theme) => ({
+          position: "absolute",
+          right: 8,
+          top: 8,
+        })}
+      >
+        <Close color="error" />
+      </IconButton>
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogContent>
           <Stack spacing={2}>
+            <Typography>Status</Typography>
             <Controller
               control={control}
               name="ket"
@@ -66,35 +84,40 @@ const DialogStatus = ({ isOpen, onClose, queue }) => {
               }
             />
             {["F", "G"].includes(watch("ket")) && (
-              <Controller
-                name="idkaryawan"
-                control={control}
-                render={({ field }) => (
-                  <Autocomplete
-                    {...field}
-                    options={safeArray(masterKaryawan)}
-                    getOptionLabel={(option) => option?.nmkaryawan || ""}
-                    value={
-                      safeArray(masterKaryawan).find(
-                        (emp) => emp.idkaryawan === field.value
-                      ) || null
-                    }
-                    onChange={(_, newValue) =>
-                      field.onChange(newValue?.idkaryawan)
-                    }
-                    renderInput={(params) => (
-                      <TextField {...params} label="Nama Teknisi" fullWidth />
-                    )}
-                  />
-                )}
-              />
+              <>
+                <Typography>Teknisi</Typography>
+                <Controller
+                  name="idkaryawan"
+                  control={control}
+                  rules={{
+                    required: "Teknisi Wajib Dipilih"
+                  }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      {...field}
+                      options={safeArray(masterKaryawan)}
+                      getOptionLabel={(option) => option?.nmkaryawan || ""}
+                      value={
+                        safeArray(masterKaryawan).find(
+                          (emp) => emp.idkaryawan === field.value
+                        ) || null
+                      }
+                      onChange={(_, newValue) =>
+                        field.onChange(newValue?.idkaryawan)
+                      }
+                      renderInput={(params) => (
+                        <TextField {...params} label="Nama Teknisi" fullWidth />
+                      )}
+                    />
+                  )}
+                />
+                {errors?.idkaryawan &&
+                  <FormHelperText error>{errors.idkaryawan.message}</FormHelperText>}
+              </>
             )}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} variant="contained" color="error">
-            Tutup
-          </Button>
           <Button
             type="submit"
             onClick={handleSubmit(onSubmit)}

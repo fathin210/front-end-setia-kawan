@@ -23,6 +23,7 @@ import {
   TableCell,
   CircularProgress,
   FormHelperText,
+  IconButton,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useFetchMasterAction } from "../../hooks/useFetchMasterAction";
@@ -34,7 +35,7 @@ import { useFetchMasterPelayanan } from "../../hooks/useFetchMasterPelayanan";
 import { kategoriMap } from "../../constants/variables";
 import { useFetchShift } from "../../hooks/useFetchShift";
 import { useFetchPDFInvoice } from "../../hooks/useFetchPDFInvoice";
-import { Print } from "@mui/icons-material";
+import { Close, Print } from "@mui/icons-material";
 import { useFetchDeposit } from "../../hooks/useFetchDeposit";
 import { Controller, useForm } from "react-hook-form";
 import usePdfStore from "../../store/pdfStore";
@@ -191,6 +192,18 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
   return (
     <Dialog maxWidth="md" fullWidth open={isOpen}>
       <DialogTitle>Rincian Biaya</DialogTitle>
+      <IconButton
+        aria-label="close"
+        onClick={onClose}
+        color="error"
+        sx={(theme) => ({
+          position: "absolute",
+          right: 8,
+          top: 8,
+        })}
+      >
+        <Close color="error" />
+      </IconButton>
       <DialogContent>
         <form onSubmit={handleSubmit(handleUpdateQueue)}>
           <Box sx={{ mt: 2 }}>
@@ -581,9 +594,6 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
           </Grid>
           <Grid item xs={12}>
             <Box display="flex" justifyContent="flex-end" gap={2}>
-              <Button variant="contained" onClick={onClose} color="secondary">
-                Tutup
-              </Button>
               <Button
                 onClick={handleSubmit(handleUpdateQueue)}
                 color="primary"

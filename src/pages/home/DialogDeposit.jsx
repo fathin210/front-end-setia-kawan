@@ -23,6 +23,7 @@ import {
   TableCell,
   Paper,
   Box,
+  IconButton,
 } from "@mui/material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
@@ -34,7 +35,7 @@ import {
   useUpdateDeposit,
 } from "../../hooks/useMutateDeposit";
 import { useFetchPDFDeposit } from "../../hooks/useFetchPDFDeposit";
-import { Print } from "@mui/icons-material";
+import { Close, Print } from "@mui/icons-material";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
 import usePdfStore from "../../store/pdfStore";
 import { CONFIRM_DELETE } from "../../constants/variables";
@@ -114,6 +115,17 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
     <>
       <Dialog open={isOpen} fullWidth maxWidth="sm">
         <DialogTitle>Input Deposit</DialogTitle>
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={(theme) => ({
+            position: "absolute",
+            right: 8,
+            top: 8,
+          })}
+        >
+          <Close color="error" />
+        </IconButton>
         <DialogContent>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={12}>
@@ -364,9 +376,6 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
             </Grid>
             <Grid item xs={12}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button onClick={onClose} variant="contained" color="error">
-                  Tutup
-                </Button>
                 <Button
                   onClick={handleSubmit(onSubmit)}
                   color="primary"
@@ -414,7 +423,7 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
                     tanggal_pelaks: watch("tanggal_diambil"),
                   });
                   setDialog(false);
-                } catch (error) {}
+                } catch (error) { }
               }}
               color="success"
               disabled={addToQueue.isPending}

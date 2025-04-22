@@ -20,7 +20,7 @@ import {
   Typography,
   CircularProgress,
 } from "@mui/material";
-import { Edit, Delete, Search } from "@mui/icons-material";
+import { Edit, Delete, Search, Close } from "@mui/icons-material";
 import { useFetchKaryawan } from "../../../hooks/useFetchKaryawan";
 import {
   useCreateKaryawan,
@@ -96,7 +96,7 @@ const AdminEmployee = () => {
       try {
         await deleteMutation.mutateAsync(id);
         refetch();
-      } catch (err) {}
+      } catch (err) { }
     }
   };
 
@@ -188,6 +188,17 @@ const AdminEmployee = () => {
         <DialogTitle>
           {editing ? "Edit Karyawan" : "Tambah Karyawan"}
         </DialogTitle>
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={() => ({
+            position: "absolute",
+            right: 8,
+            top: 8,
+          })}
+        >
+          <Close color="error" />
+        </IconButton>
         <DialogContent>
           <TextField
             autoComplete="off"
@@ -246,7 +257,6 @@ const AdminEmployee = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Batal</Button>
           <Button variant="contained" onClick={handleSubmit}>
             Simpan
           </Button>

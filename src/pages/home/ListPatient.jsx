@@ -160,7 +160,7 @@ const ListPatient = () => {
             />
           </Stack>
 
-          <Stack gap={3} sx={{ flexGrow: 1, overflow: "auto", height: "54vh" }}>
+          <Stack gap={3} sx={{ flexGrow: 1, overflow: "auto", height: "50vh" }}>
             {error ? (
               <Alert severity="error" sx={{ mb: 2 }}>
                 Terjadi kesalahan saat mengambil data: {error.message}

@@ -21,6 +21,8 @@ import {
   Button,
   Tabs,
   Tab,
+  Typography,
+  DialogContent,
 } from "@mui/material";
 import { formatCurrency, safeArray } from "../../utils/common";
 import { useDebouncedCallback } from "use-debounce";
@@ -42,14 +44,36 @@ import {
 } from "../../hooks/useMutateQueue";
 import DialogDeposit from "./DialogDeposit";
 import DialogStatus from "./DialogStatus";
+import usePdfStore from "../../store/pdfStore";
+import { useFetchPDFCard } from "../../hooks/useFetchPDFCard";
 
 const ListQueue = () => {
+  const { openDialog, setLoading, setPdfURL, setError } = usePdfStore()
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
   const [search, setSearch] = useState("");
   const [dialog, setDialog] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [status, setStatus] = useState("process");
+
+  const { refetch } = useFetchPDFCard(null, selectedQueue?.nomorpasien, {
+    enabled: false,
+  });
+
+  const handlePrintCard = async () => {
+    try {
+      openDialog("Kartu Pasien");
+      setLoading(true);
+      const { data } = await refetch();
+      if (data) {
+        const url = URL.createObjectURL(data);
+        setPdfURL(url);
+        setLoading(false);
+      }
+    } catch (error) {
+      setError(error?.message);
+    }
+  };
 
   const debouncedSetSearch = useDebouncedCallback((value) => {
     setSearch(value);
@@ -89,7 +113,7 @@ const ListQueue = () => {
 
   return (
     <>
-      <Paper sx={{ p: 2, flexGrow: 1, overflow: "auto", height: "86vh" }}>
+      <Paper sx={{ p: 2, flexGrow: 1, overflow: "auto", height: "85vh" }}>
         <Tabs
           value={status}
           onChange={(_, newValue) => setStatus(newValue)}
@@ -214,14 +238,22 @@ const ListQueue = () => {
         >
           Ubah Status
         </MenuItem>
-        {/* <MenuItem
+        <MenuItem
+          onClick={() => {
+            handlePrintCard()
+            handleMenuClose();
+          }}
+        >
+          Cetak Kartu Pasien
+        </MenuItem>
+        <MenuItem
           onClick={() => {
             handleDialogOpen(CONFIRM_DELETE);
             handleMenuClose();
           }}
         >
           Hapus Dari Rincian
-        </MenuItem> */}
+        </MenuItem>
         <MenuItem
           onClick={() => {
             handleDialogOpen(CLEAR_QUEUE);
@@ -245,15 +277,17 @@ const ListQueue = () => {
         <DialogQueueDetail
           isOpen={dialog === ADD_QUEUE_DETAIL}
           onClose={handleDialogClose}
-          queue={selectedQueue} // Pass data antrian yang dipilih ke dialog
+          queue={selectedQueue}
         />
       )}
 
       {dialog === CONFIRM_DELETE && (
         <Dialog open onClose={handleDialogClose}>
-          <DialogTitle>
-            Apakah kamu yakin ingin menghapus rincian ini?
-          </DialogTitle>
+          <DialogContent>
+            <Typography>
+              Apakah kamu yakin ingin menghapus rincian ini?
+            </Typography>
+          </DialogContent>
           <DialogActions>
             <Button variant="contained" onClick={handleDialogClose}>
               Tutup
@@ -278,9 +312,11 @@ const ListQueue = () => {
       )}
       {dialog === CLEAR_QUEUE && (
         <Dialog open onClose={handleDialogClose}>
-          <DialogTitle>
-            Apakah kamu yakin ingin mereset data rincian ini?
-          </DialogTitle>
+          <DialogContent>
+            <Typography>
+              Apakah kamu yakin ingin mereset data rincian ini?
+            </Typography>
+          </DialogContent>
           <DialogActions>
             <Button variant="contained" onClick={handleDialogClose}>
               Tutup

@@ -50,6 +50,25 @@ const groupBy = (arr, key) => {
   return ordered;
 };
 
+const calculateTotal = (data, key, condition = () => true) => {
+  return safeArray(data).reduce((sum, item) => {
+    if (condition(item)) {
+      return sum + item[key];
+    }
+    return sum;
+  }, 0);
+};
+
+// Utility untuk menghitung jumlah berdasarkan kondisi tertentu
+const calculateCount = (data, key, value) => {
+  return safeArray(data).reduce((count, item) => {
+    if (item?.[key] === value) {
+      return count + 1;
+    }
+    return count;
+  }, 0);
+};
+
 const Commissions = () => {
   const theme = useTheme();
   const [mode, setMode] = useState("harian");
@@ -64,62 +83,34 @@ const Commissions = () => {
 
   const groupedData = groupBy(data, "nama_karyawan");
 
-  const totalJumlahGigi = safeArray(data).reduce(
-    (sum, item) => sum + item.jml_gigi,
-    0
-  );
-  const totalBiayaPasang = safeArray(data).reduce(
-    (sum, item) => sum + item.total_biaya,
-    0
-  );
-  const totalKomisiKolektif = safeArray(data).reduce(
-    (sum, item) => sum + item.nkomisi_kolektif,
-    0
-  );
-  const totalKomisiPribadi = safeArray(data).reduce(
-    (sum, item) => sum + item.nkomisi_pribadi,
-    0
-  );
-  const totalBiayaPerbaikan = safeArray(data).reduce(
-    (sum, item) => sum + item.biaya_perbaikan,
-    0
-  );
-  const totalKomisiPerbaikan = safeArray(data).reduce(
-    (sum, item) => sum + item.komisi_perbaikan,
-    0
-  );
-  const totalJumlahKomisiPribadi = safeArray(data).reduce((sum, item) => {
-    return sum + item.nkomisi_pribadi + item.komisi_perbaikan;
-  }, 0);
+  // Menghitung total berdasarkan kolom yang berbeda
+  const totalJumlahGigi = calculateTotal(data, 'jml_gigi');
+  const totalBiayaPasang = calculateTotal(data, 'total_biaya');
+  const totalKomisiKolektif = calculateTotal(data, 'nkomisi_kolektif');
+  const totalKomisiPribadi = calculateTotal(data, 'nkomisi_pribadi');
+  const totalBiayaPerbaikan = calculateTotal(data, 'biaya_perbaikan');
+  const totalKomisiPerbaikan = calculateTotal(data, 'komisi_perbaikan');
+
+  // Menghitung total komisi pribadi termasuk perbaikan
+  const totalJumlahKomisiPribadi = calculateTotal(data, 'nkomisi_pribadi', item => item?.nkomisi_pribadi > 0)
+    + calculateTotal(data, 'komisi_perbaikan', item => item?.komisi_perbaikan > 0);
+
+  // Total Pendapatan dan Komisi
   const totalPendapatan = totalBiayaPasang + totalBiayaPerbaikan;
-  const totalKomisi =
-    totalKomisiKolektif + totalKomisiPribadi + totalKomisiPerbaikan;
+  const totalKomisi = totalKomisiKolektif + totalKomisiPribadi + totalKomisiPerbaikan;
 
-  const totalGigi40 = safeArray(data).reduce((sum, item) => {
-    if (item?.tarif === 40000) {
-      return ++sum;
-    }
-    return sum;
-  }, 0);
-  const totalGigi60 = safeArray(data).reduce((sum, item) => {
-    if (item?.tarif === 60000) {
-      return ++sum;
-    }
-    return sum;
-  }, 0);
-  const totalGigi160 = safeArray(data).reduce((sum, item) => {
-    if (item?.tarif === 160000) {
-      return ++sum;
-    }
-    return sum;
-  }, 0);
+  // Menghitung jumlah berdasarkan tarif tertentu
+  const totalGigi40 = calculateCount(data, 'tarif', 40000);
+  const totalGigi60 = calculateCount(data, 'tarif', 60000);
+  const totalGigi160 = calculateCount(data, 'tarif', 160000);
 
+  // Mengelompokkan berdasarkan status
   const groupByStatus = safeArray(data).reduce((acc, item) => {
     if (item?.ket) {
       acc[item.ket] = (acc[item.ket] || 0) + 1;
     }
     return acc;
-  }, {})
+  }, {});
 
   const checkPassword = (event) => {
     event.preventDefault();
@@ -158,7 +149,7 @@ const Commissions = () => {
               sx={{ my: 2 }}
             />
             <Button variant="contained" fullWidth type="submit">
-              Simpan
+              Masuk
             </Button>
           </form>
         </Paper>
@@ -230,13 +221,15 @@ const Commissions = () => {
         <>
           <TableContainer
             component={Paper}
-            sx={{ maxHeight: "75vh", maxWidth: "100vw" }}
+            sx={{ maxHeight: "75vh", maxWidth: "89vw" }}
           >
-            <Table>
+            <Table sx={{
+              tableLayout: "fixed"
+            }}>
               <TableHead>
                 <TableRow>
-                  <TableCell>No</TableCell>
-                  <TableCell>Invoice</TableCell>
+                  <TableCell sx={{ width: 10 }}>No</TableCell>
+                  <TableCell sx={{ width: 150 }}>Invoice</TableCell>
                   <TableCell>Tanggal Transaksi</TableCell>
                   <TableCell>Nama Pasien</TableCell>
                   <TableCell>Tindakan</TableCell>
@@ -265,9 +258,10 @@ const Commissions = () => {
 
                   return (
                     <React.Fragment key={nama}>
-                      <TableRow hover>
-                        <TableCell>{index + 1}.</TableCell>
-                        <TableCell colSpan={8}>
+                      <TableRow sx={(theme) => ({
+                        background: theme.palette.grey[700]
+                      })} hover>
+                        <TableCell colSpan={9}>
                           <strong>
                             {nama === "null" ? "Belum diproses" : nama}
                           </strong>
@@ -288,9 +282,7 @@ const Commissions = () => {
                       {rows.map((row, idx) => (
                         <TableRow hover key={row.id}>
                           <TableCell align="right">
-                            {mode === "harian"
-                              ? String.fromCharCode(97 + idx)
-                              : ++idx}
+                            {++idx}
                           </TableCell>
                           <TableCell>#SK{row.nopendaftaran}#</TableCell>
                           <TableCell>

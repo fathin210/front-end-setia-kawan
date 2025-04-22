@@ -22,4 +22,8 @@ export const status = [
     "kdstatus": "G",
     "nmstatus": "Garansi"
   },
+  {
+    "kdstatus": "B",
+    "nmstatus": "Batal"
+  },
 ]

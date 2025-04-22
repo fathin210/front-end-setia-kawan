@@ -114,6 +114,13 @@ const Commissions = () => {
     return sum;
   }, 0);
 
+  const groupByStatus = safeArray(data).reduce((acc, item) => {
+    if (item?.ket) {
+      acc[item.ket] = (acc[item.ket] || 0) + 1;
+    }
+    return acc;
+  }, {})
+
   const checkPassword = (event) => {
     event.preventDefault();
     if (password === "kancil08") {
@@ -223,7 +230,7 @@ const Commissions = () => {
         <>
           <TableContainer
             component={Paper}
-            sx={{ overflow: "auto", maxHeight: "75vh" }}
+            sx={{ maxHeight: "75vh", maxWidth: "100vw" }}
           >
             <Table>
               <TableHead>
@@ -293,7 +300,7 @@ const Commissions = () => {
                           </TableCell>
                           <TableCell>{row.nmpasien}</TableCell>
                           <TableCell>{row.nama_tindakan}</TableCell>
-                          <TableCell>{row.ket}</TableCell>
+                          <TableCell>{row?.nama_keterangan}</TableCell>
                           <TableCell align="right">
                             {row.tarif.toLocaleString()}
                           </TableCell>
@@ -412,6 +419,36 @@ const Commissions = () => {
                         <TableCell>Total Pendapatan - Total Komisi</TableCell>
                         <TableCell>
                           {formatCurrency(totalPendapatan - totalKomisi)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Lunas</TableCell>
+                        <TableCell>
+                          {groupByStatus["G"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Free</TableCell>
+                        <TableCell>
+                          {groupByStatus["F"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Garansi</TableCell>
+                        <TableCell>
+                          {groupByStatus["G"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>DP</TableCell>
+                        <TableCell>
+                          {groupByStatus["D"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Batal</TableCell>
+                        <TableCell>
+                          {groupByStatus["B"] || 0}
                         </TableCell>
                       </TableRow>
                     </TableBody>

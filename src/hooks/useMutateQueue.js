@@ -29,7 +29,7 @@ export const useAddToQueueMutation = (onComplete) => {
         nkomisi_pribadi2: 0,
         biaya_perbaikan: 0,
         komisi_perbaikan: 0,
-        ket: "",
+        ket: data?.ket ? data.ket : "",
         dp: 0,
       });
     },
@@ -138,4 +138,29 @@ export const useDeleteQueue = () => {
       showAlert("Gagal menghapus data rincian!", "error");
     }
   });
+
 };
+export const useUpdateStatus = (onComplete) => {
+  const { showAlert } = useAlertStore.getState();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data) => {
+      return await putFetcher(`${baseURL}/${data.id}`, {
+        ...data,
+        status: "x"
+      });
+    },
+    onMutate: () => {
+      showAlert("Memproses permintaan...", "waiting");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["listQueue"]);
+      showAlert("Status berhasil diupdate!", "success");
+      onComplete && onComplete()
+    },
+    onError: (error) => {
+      console.error("Error:", error);
+      showAlert("Gagal mengupdate status!", "error");
+    },
+  });
+}

@@ -43,8 +43,7 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
     if (!draft?.tanggal_pelaks) return;
     mutation.mutateAsync({
       ...patient,
-      tanggal_pelaks: draft?.tanggal_pelaks,
-      idkaryawan: draft?.idkaryawan,
+      ...draft,
     });
   };
 

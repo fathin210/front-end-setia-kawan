@@ -119,7 +119,6 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
       setValue("batal_dp", !!queue?.iddp);
       setValue("jml_gigi", 0);
     } else {
-      setValue("idkaryawan", resolvedDP?.idkaryawan || null);
       setValue("jml_gigi", resolvedDP?.jumlah_gigi || 0);
       setValue(
         "tarif",
@@ -151,6 +150,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
         iddp: resolvedDP?.iddp || watch("iddp"),
         dp: resolvedDP?.jumlah || watch("dp"),
         status: "x",
+        ket: queue?.ket ? queue.ket : "L"
       });
       setIsPrintable(true);
     } catch (err) {
@@ -217,6 +217,42 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                 />
               </Grid>
 
+              <Grid item xs={12}>
+                <Typography variant="h6" fontWeight="bold">
+                  Teknisi
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Controller
+                  name="idkaryawan"
+                  control={control}
+                  rules={{ required: "Teknisi wajib dipilih" }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={safeArray(masterKaryawan)}
+                      getOptionLabel={(option) => option?.nmkaryawan || ""}
+                      value={
+                        safeArray(masterKaryawan).find(
+                          (emp) => emp.idkaryawan === field.value
+                        ) || null
+                      }
+                      onChange={(_, newValue) => {
+                        field.onChange(newValue?.idkaryawan || "");
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Nama Teknisi"
+                          fullWidth
+                          error={Boolean(errors.idkaryawan)}
+                          helperText={errors.idkaryawan?.message}
+                        />
+                      )}
+                    />
+                  )}
+                />
+              </Grid>
+
               {/* Pilih Tindakan */}
               <Grid item xs={12}>
                 <FormControl fullWidth>
@@ -251,47 +287,6 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   )}
                 </FormControl>
               </Grid>
-
-              {/* Nama Teknisi */}
-              {watch("kdtindakan") && (
-                <>
-                  <Grid item xs={12}>
-                    <Typography variant="h6" fontWeight="bold">
-                      Teknisi
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Controller
-                      name="idkaryawan"
-                      control={control}
-                      rules={{ required: "Teknisi wajib dipilih" }}
-                      render={({ field }) => (
-                        <Autocomplete
-                          options={safeArray(masterKaryawan)}
-                          getOptionLabel={(option) => option?.nmkaryawan || ""}
-                          value={
-                            safeArray(masterKaryawan).find(
-                              (emp) => emp.idkaryawan === field.value
-                            ) || null
-                          }
-                          onChange={(_, newValue) => {
-                            field.onChange(newValue?.idkaryawan || "");
-                          }}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Nama Teknisi"
-                              fullWidth
-                              error={Boolean(errors.idkaryawan)}
-                              helperText={errors.idkaryawan?.message}
-                            />
-                          )}
-                        />
-                      )}
-                    />
-                  </Grid>
-                </>
-              )}
 
               {["01", "04"].includes(watch("kdtindakan")) && (
                 <>
@@ -491,7 +486,6 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                           control={control}
                           rules={{
                             required: "Biaya perbaikan wajib diisi",
-                            validate: (value) => value > 0 || "Biaya harus lebih dari 0",
                           }}
                           render={({ field }) => (
                             <RadioGroup

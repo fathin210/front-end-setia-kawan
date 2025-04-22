@@ -34,12 +34,14 @@ import {
   CLEAR_QUEUE,
   CONFIRM_DELETE,
   DEPOSIT,
+  DIALOG_STATUS,
 } from "../../constants/variables";
 import {
   useClearQueueMutation,
   useDeleteQueue,
 } from "../../hooks/useMutateQueue";
 import DialogDeposit from "./DialogDeposit";
+import DialogStatus from "./DialogStatus";
 
 const ListQueue = () => {
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
@@ -206,12 +208,20 @@ const ListQueue = () => {
         </MenuItem>
         <MenuItem
           onClick={() => {
+            handleDialogOpen(DIALOG_STATUS);
+            handleMenuClose();
+          }}
+        >
+          Ubah Status
+        </MenuItem>
+        {/* <MenuItem
+          onClick={() => {
             handleDialogOpen(CONFIRM_DELETE);
             handleMenuClose();
           }}
         >
           Hapus Dari Rincian
-        </MenuItem>
+        </MenuItem> */}
         <MenuItem
           onClick={() => {
             handleDialogOpen(CLEAR_QUEUE);
@@ -289,6 +299,13 @@ const ListQueue = () => {
         <DialogDeposit
           isOpen={true}
           data={selectedQueue}
+          onClose={handleDialogClose}
+        />
+      )}
+      {dialog === DIALOG_STATUS && (
+        <DialogStatus
+          isOpen={true}
+          queue={selectedQueue}
           onClose={handleDialogClose}
         />
       )}

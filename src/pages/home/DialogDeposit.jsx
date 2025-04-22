@@ -402,7 +402,7 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
             </Typography>
           </DialogContent>
           <DialogActions>
-            <Button variant="contained" onClick={() => setDialog(false)}>
+            <Button variant="contained" color="error" onClick={() => setDialog(false)}>
               Tutup
             </Button>
             <Button
@@ -416,7 +416,7 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
                   setDialog(false);
                 } catch (error) {}
               }}
-              color="error"
+              color="success"
               disabled={addToQueue.isPending}
             >
               {addToQueue.isPending ? "Memproses..." : "Ya, daftarkan"}

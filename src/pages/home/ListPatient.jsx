@@ -41,10 +41,12 @@ const ListPatient = () => {
   // Debounced setter
   const debouncedUpdateSearch = useDebouncedCallback((val) => {
     setSearch(val);
+    setPage(1)
   }, 500);
 
   const debouncedUpdateAddress = useDebouncedCallback((val) => {
     setAddress(val);
+    setPage(1)
   }, 500);
 
   const handleSearchChange = (e) => {

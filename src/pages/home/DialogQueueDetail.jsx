@@ -341,7 +341,10 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                     <Controller
                       name="jml_gigi"
                       control={control}
-                      rules={{ required: "Jumlah gigi wajib dipilih" }}
+                      rules={{
+                        required: "Jumlah gigi wajib dipilih",
+                        validate: value => (value >= 1 ? true : "Jumlah gigi minimal 1")
+                      }}
                       render={({ field }) => (
                         <Autocomplete
                           options={Array.from({ length: 28 }, (_, i) => i + 1)}
@@ -398,21 +401,39 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
 
                   {/* Komisi - read only */}
                   <Grid item xs={6} sm={4}>
-                    <TextField
-                      label="Kolektif"
-                      fullWidth
-                      type="number"
-                      value={currentPelayanan?.komisi_kolektif || 0}
-                      InputProps={{ readOnly: true }}
+                    <Controller
+                      name="komisi_kolektif"
+                      control={control}
+                      rules={{ required: "Komisi kolektif wajib diisi" }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Kolektif"
+                          fullWidth
+                          type="number"
+                          required
+                          error={errors?.komisi_kolektif}
+                          helperText={errors?.komisi_kolektif?.message}
+                        />
+                      )}
                     />
                   </Grid>
                   <Grid item xs={6} sm={4}>
-                    <TextField
-                      label="Pribadi"
-                      fullWidth
-                      type="number"
-                      value={currentPelayanan?.komisi_pribadi || 0}
-                      InputProps={{ readOnly: true }}
+                    <Controller
+                      name="komisi_pribadi"
+                      control={control}
+                      rules={{ required: "Komisi pribadi wajib diisi" }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Pribadi"
+                          fullWidth
+                          type="number"
+                          required
+                          error={errors.komisi_pribadi}
+                          helperText={errors?.komisi_pribadi?.message}
+                        />
+                      )}
                     />
                   </Grid>
                 </>
@@ -468,13 +489,15 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                         <Controller
                           name="biaya_perbaikan"
                           control={control}
+                          rules={{
+                            required: "Biaya perbaikan wajib diisi",
+                            validate: (value) => value > 0 || "Biaya harus lebih dari 0",
+                          }}
                           render={({ field }) => (
                             <RadioGroup
                               row
                               {...field}
-                              onChange={(e) =>
-                                handleBiayaPerbaikanChange(e, field)
-                              }
+                              onChange={(e) => handleBiayaPerbaikanChange(e, field)}
                             >
                               {[30000, 50000, 80000, 100000].map((val) => (
                                 <FormControlLabel
@@ -490,22 +513,21 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
 
                         {/* TextField for Custom Biaya */}
                         <Controller
-                          name="biaya_perbaikan_custom"
+                          name="biaya_perbaikan"
                           control={control}
                           render={({ field }) => (
                             <TextField
                               {...field}
                               label="Harga"
                               variant="standard"
-                              value={
-                                field.value ? formatCurrency(field.value) : ""
-                              }
-                              onChange={(e) =>
-                                handleBiayaPerbaikanChange(e, field)
-                              }
+                              error={!!errors.biaya_perbaikan}
+                              helperText={errors.biaya_perbaikan?.message}
+                              value={field.value ? formatCurrency(field.value) : ""}
+                              onChange={(e) => handleBiayaPerbaikanChange(e, field)}
                             />
                           )}
                         />
+
                       </Stack>
                     </FormControl>
                   </Grid>
@@ -549,7 +571,9 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   {/* Total Akhir selalu ditampilkan */}
                   <TableRow>
                     <TableCell>
-                      <Typography fontWeight="bold">Total Akhir ({totalSetelahDP >= 0 ? "Sisa Pembayaran" : "Kelebihan Pembayaran"})</Typography>
+                      <Typography fontWeight="bold">Total Akhir
+                        {/* ({totalSetelahDP >= 0 ? "Sisa Pembayaran" : "Pembayaran"}) */}
+                      </Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Typography fontWeight="bold">

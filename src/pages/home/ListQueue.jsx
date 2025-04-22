@@ -210,7 +210,7 @@ const ListQueue = () => {
             handleMenuClose();
           }}
         >
-          Hapus Rincian
+          Hapus Dari Rincian
         </MenuItem>
         <MenuItem
           onClick={() => {

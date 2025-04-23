@@ -86,17 +86,6 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
   }, [deposit, queue]);
 
   const isDpExist = !!resolvedDP;
-  const currentPelayanan = useMemo(() => {
-    return safeArray(masterPelayanan).find((item) => {
-      if (watch("kdshift") && watch("jml_gigi") && watch("tarif")) {
-        return (
-          item.kdshift === watch("kdshift") &&
-          item.jml_gigi === watch("jml_gigi") &&
-          item.kategori === kategoriMap[watch("tarif")]
-        );
-      }
-    });
-  }, [masterPelayanan, watch("kdshift"), watch("jml_gigi"), watch("tarif")]);
 
   const handleTarifChange = (e, field) => {
     const value = Number(e.target.value.replace(/\D/g, ""));
@@ -159,6 +148,17 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
     }
   };
 
+  const updateKomisiByPelayanan = (nextKdshift, nextJmlGigi) => {
+    const item = safeArray(masterPelayanan).find(
+      (el) => el.kdshift === nextKdshift && el.jml_gigi === nextJmlGigi
+    );
+
+    if (item) {
+      setValue("komisi_kolektif", item.komisi_kolektif || 0);
+      setValue("komisi_pribadi", item.komisi_pribadi || 0);
+    }
+  };
+
   const totalPemasangan =
     watch("tarif") && watch("jml_gigi")
       ? watch("tarif") * watch("jml_gigi")
@@ -173,13 +173,6 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
       ? totalBiaya - dpAmount
       : totalBiaya;
   }, [totalBiaya, dpAmount, watch("kdtindakan")]);
-
-  useEffect(() => {
-    if (currentPelayanan) {
-      setValue("komisi_kolektif", currentPelayanan.komisi_kolektif || 0);
-      setValue("komisi_pribadi", currentPelayanan.komisi_pribadi || 0);
-    }
-  }, [currentPelayanan, setValue]);
 
   useEffect(() => {
     if (resolvedDP) {
@@ -358,9 +351,15 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                           options={Array.from({ length: 28 }, (_, i) => i + 1)}
                           getOptionLabel={(opt) => String(opt)}
                           value={field.value || null}
-                          onChange={(_, newValue) =>
-                            field.onChange(newValue || null)
-                          }
+                          onChange={(_, newValue) => {
+                            const nextVal = newValue || null;
+                            field.onChange(nextVal);
+
+                            const shiftVal = watch("kdshift");
+                            if (shiftVal && nextVal) {
+                              updateKomisiByPelayanan(shiftVal, nextVal);
+                            }
+                          }}
                           renderInput={(params) => (
                             <TextField
                               {...params}
@@ -373,6 +372,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                         />
                       )}
                     />
+
                   </Grid>
 
                   {/* Shift */}
@@ -391,7 +391,13 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                             ) || null
                           }
                           onChange={(_, newValue) => {
-                            field.onChange(String(newValue?.kdshift));
+                            const nextVal = String(newValue?.kdshift || "");
+                            field.onChange(nextVal);
+
+                            const gigiVal = watch("jml_gigi");
+                            if (gigiVal && nextVal) {
+                              updateKomisiByPelayanan(nextVal, gigiVal);
+                            }
                           }}
                           renderInput={(params) => (
                             <TextField

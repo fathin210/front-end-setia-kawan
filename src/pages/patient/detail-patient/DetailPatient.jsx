@@ -115,7 +115,7 @@ const DetailPatient = () => {
           isOpen={true}
           editData={activePatient}
           handleDialog={handleDialog}
-          refetch={refetch}
+          refetch={listQueue.refetch}
         />
       )}
       {dialog === ADD_QUEUE && (

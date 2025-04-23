@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Add, Close, Search } from "@mui/icons-material";
 import PatientCard from "./PatientCard";
 import { fetcher } from "../../utils/fetcher";
@@ -64,12 +64,14 @@ const ListPatient = () => {
   const clearSearch = () => {
     setSearchInput("");
     setSearch("");
+    localStorage.removeItem("search");
     debouncedUpdateSearch.cancel(); // optional, untuk menghentikan debounce
   };
 
   const clearAddress = () => {
     setAddressInput("");
     setAddress("");
+    localStorage.removeItem("address");
     debouncedUpdateAddress.cancel(); // optional, untuk menghentikan debounce
   };
 
@@ -81,6 +83,27 @@ const ListPatient = () => {
 
   const handleDialog = (value) => setDialog(value);
   const handlePage = (_, value) => setPage(value);
+
+  useEffect(() => {
+    const savedSearch = localStorage.getItem("search");
+    const savedAddress = localStorage.getItem("address");
+    if (savedSearch) {
+      setSearch(savedSearch);
+      setSearchInput(savedSearch);
+    }
+    if (savedAddress) {
+      setAddress(savedAddress);
+      setAddressInput(savedAddress);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("search", search);
+  }, [search]);
+
+  useEffect(() => {
+    localStorage.setItem("address", address);
+  }, [address]);
 
   return (
     <>

@@ -16,7 +16,6 @@ import {
   Menu,
   MenuItem,
   Dialog,
-  DialogTitle,
   DialogActions,
   Button,
   Tabs,
@@ -26,7 +25,7 @@ import {
 } from "@mui/material";
 import { formatCurrency, safeArray } from "../../utils/common";
 import { useDebouncedCallback } from "use-debounce";
-import { MoreVert, Search } from "@mui/icons-material";
+import { Close, MoreVert, Search } from "@mui/icons-material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import useListQueue from "../../hooks/useListQueue";
@@ -51,6 +50,7 @@ const ListQueue = () => {
   const { openDialog, setLoading, setPdfURL, setError } = usePdfStore()
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [dialog, setDialog] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -75,9 +75,22 @@ const ListQueue = () => {
     }
   };
 
-  const debouncedSetSearch = useDebouncedCallback((value) => {
+  const debouncedUpdateSearch = useDebouncedCallback((value) => {
     setSearch(value);
   }, 500);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedUpdateSearch(value);
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearch("");
+    debouncedUpdateSearch.cancel(); // optional, untuk menghentikan debounce
+  };
+
 
   const { data, error, isLoading } = useListQueue(
     date,
@@ -128,15 +141,27 @@ const ListQueue = () => {
           <TextField
             placeholder="Cari Pasien (Tindakan Hari Ini)"
             name="search"
-            onChange={(event) => debouncedSetSearch(event.target.value)}
+            value={searchInput}
+            onChange={handleSearchChange}
             fullWidth
             autoComplete="off"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="start">
+                    {searchInput && (
+                      <IconButton onClick={clearSearch}>
+                        <Close />
+                      </IconButton>
+                    )}
+                  </InputAdornment>
+                )
+              }
             }}
             sx={{ flex: 1 }}
           />

@@ -2,27 +2,14 @@ import React, { useState } from "react";
 import {
   Container,
   Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Card,
   CardContent,
   Grid,
-  Divider,
-  Box,
-  CircularProgress,
-  Alert,
   Stack,
   Avatar,
   Button,
 } from "@mui/material";
-import moment from "moment";
 import { Person } from "@mui/icons-material";
-import { formatCurrency } from "../../../utils/common";
 import useListQueue from "../../../hooks/useListQueue";
 import DialogPatientForm from "../../home/DialogPatientForm";
 import usePatientStore from "../../../store/patientStore";
@@ -30,6 +17,7 @@ import { ADD_QUEUE, EDIT_PATIENT } from "../../../constants/variables";
 import DialogQueue from "../../home/DialogQueue";
 import MaleImage from "../../../assets/male.png";
 import FemaleImage from "../../../assets/female.png";
+import HistoryPatient from "./HistoryPatient";
 
 const DetailPatient = () => {
   const { activePatient } = usePatientStore();
@@ -37,12 +25,7 @@ const DetailPatient = () => {
 
   const handleDialog = (value) => setDialog(value);
 
-  const {
-    data: rincianData,
-    error,
-    isLoading,
-    refetch,
-  } = useListQueue("", activePatient?.nomorpasien);
+  const listQueue = useListQueue("", activePatient?.nomorpasien, "all");
 
   if (!activePatient) {
     return (
@@ -125,86 +108,7 @@ const DetailPatient = () => {
       </Card>
 
       {/* RINCIAN PELAYANAN */}
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-          Riwayat Rincian Pelayanan
-        </Typography>
-        <Divider sx={{ my: 2 }} />
-      </Box>
-
-      {/* STATE LOADING */}
-      {isLoading && (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
-          <CircularProgress />
-        </Box>
-      )}
-
-      {/* STATE ERROR */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Terjadi kesalahan saat mengambil data: {error.message}
-        </Alert>
-      )}
-
-      {/* TABLE RINCIAN */}
-      {!isLoading && !error && rincianData?.length > 0 ? (
-        <TableContainer
-          component={Paper}
-          sx={{ borderRadius: 2, boxShadow: 3 }}
-        >
-          <Table>
-            <TableHead sx={{ background: "#1976d2" }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Tanggal Transaksi
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Invoice
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Nama Pasien
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Tindakan
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Teknisi
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Total Biaya
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Keterangan
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rincianData.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    {row?.tanggal_pelaks
-                      ? moment(row?.tanggal_pelaks).format("DD-MM-YYYY")
-                      : ""}
-                  </TableCell>
-                  <TableCell>#SK{row.nopendaftaran}#</TableCell>
-                  <TableCell>{row.nmpasien}</TableCell>
-                  <TableCell>{row?.nama_tindakan || "-"}</TableCell>
-                  <TableCell>{row?.nama_karyawan || "-"}</TableCell>
-                  <TableCell>{formatCurrency(row.total_biaya)}</TableCell>
-                  <TableCell>{row?.ket || "-"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      ) : (
-        !isLoading &&
-        !error && (
-          <Typography sx={{ textAlign: "center", color: "gray", mt: 3 }}>
-            Tidak ada data rincian pelayanan.
-          </Typography>
-        )
-      )}
+      <HistoryPatient listQueue={listQueue} />
 
       {dialog === EDIT_PATIENT && (
         <DialogPatientForm

@@ -258,24 +258,30 @@ const Commissions = () => {
 
                   return (
                     <React.Fragment key={nama}>
-                      <TableRow sx={(theme) => ({
-                        background: theme.palette.grey[700]
-                      })} hover>
+                      <TableRow sx={{
+                        background: "lightseagreen",
+                      }}>
                         <TableCell colSpan={9}>
-                          <strong>
+                          <Typography sx={{color: "#2E2E2E"}} fontWeight="bold">
                             {nama === "null" ? "Belum diproses" : nama}
-                          </strong>
+                          </Typography>
                         </TableCell>
                         <TableCell />
                         <TableCell align="right">
-                          {totalKomisiPribadi.toLocaleString()}
+                          <Typography sx={{color: "#2E2E2E"}} fontWeight="bold">
+                            {totalKomisiPribadi.toLocaleString()}
+                          </Typography>
                         </TableCell>
                         <TableCell />
                         <TableCell align="right">
-                          {totalKomisiPerbaikan.toLocaleString()}
+                          <Typography sx={{color: "#2E2E2E"}} fontWeight="bold">
+                            {totalKomisiPerbaikan.toLocaleString()}
+                          </Typography>
                         </TableCell>
                         <TableCell align="right">
-                          {totalJumlah.toLocaleString()}
+                          <Typography sx={{color: "#2E2E2E"}} fontWeight="bold">
+                            {totalJumlah.toLocaleString()}
+                          </Typography>
                         </TableCell>
                       </TableRow>
 

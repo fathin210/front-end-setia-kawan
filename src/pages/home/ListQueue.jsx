@@ -248,11 +248,19 @@ const ListQueue = () => {
         </MenuItem>
         <MenuItem
           onClick={() => {
+            handleDialogOpen(DEPOSIT);
+            handleMenuClose();
+          }}
+        >
+          Deposit
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
             handleDialogOpen(CONFIRM_DELETE);
             handleMenuClose();
           }}
         >
-          Hapus Dari Rincian
+          Hapus Dari Antrian
         </MenuItem>
         <MenuItem
           onClick={() => {
@@ -261,14 +269,6 @@ const ListQueue = () => {
           }}
         >
           Reset Data Rincian
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleDialogOpen(DEPOSIT);
-            handleMenuClose();
-          }}
-        >
-          Deposit
         </MenuItem>
       </Menu>
 
@@ -285,7 +285,7 @@ const ListQueue = () => {
         <Dialog open onClose={handleDialogClose}>
           <DialogContent>
             <Typography>
-              Apakah kamu yakin ingin menghapus rincian ini?
+              Apakah kamu yakin ingin menghapus pasien ini dari antrian?
             </Typography>
           </DialogContent>
           <DialogActions>

@@ -20,13 +20,14 @@ import {
   InputAdornment,
   IconButton,
   Button,
+  Tooltip,
 } from "@mui/material";
 import React, { useState } from "react";
 import useListQueue from "../../../hooks/useListQueue";
 import moment from "moment";
 import { DatePicker, DesktopDatePicker } from "@mui/x-date-pickers";
 import { formatCurrency, safeArray } from "../../../utils/common";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { InfoOutlined, Visibility, VisibilityOff } from "@mui/icons-material";
 
 // Helper untuk group by karyawan
 const groupBy = (arr, key) => {
@@ -229,7 +230,6 @@ const Commissions = () => {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ width: 10 }}>No</TableCell>
-                  <TableCell sx={{ width: 150 }}>Invoice</TableCell>
                   <TableCell>Tanggal Transaksi</TableCell>
                   <TableCell>Nama Pasien</TableCell>
                   <TableCell>Tindakan</TableCell>
@@ -256,30 +256,53 @@ const Commissions = () => {
                   );
                   const totalJumlah = totalKomisiPribadi + totalKomisiPerbaikan;
 
+                  const uniqueDates = new Set(
+                    rows.map((r) => r.tanggal).filter(Boolean)
+                  );
+                  const kehadiran = uniqueDates.size;
+
                   return (
                     <React.Fragment key={nama}>
                       <TableRow sx={{
                         background: "lightseagreen",
                       }}>
-                        <TableCell colSpan={9}>
-                          <Typography sx={{color: "#2E2E2E"}} fontWeight="bold">
-                            {nama === "null" ? "Belum diproses" : nama}
-                          </Typography>
+                        <TableCell colSpan={8}>
+                          <Tooltip
+                            title={
+                              <Box sx={{ p: 1 }}>
+                                <Typography variant="subtitle2" fontWeight="bold">
+                                  {nama === "null" ? "Belum diproses" : nama}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {kehadiran} hari kehadiran
+                                </Typography>
+                              </Box>
+                            }
+                            arrow
+                            placement="top-start"
+                          >
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "help" }}>
+                              <Typography sx={{ color: "#2E2E2E" }} fontWeight="bold">
+                                {nama === "null" ? "Belum diproses" : nama}
+                              </Typography>
+                              <InfoOutlined sx={{ fontSize: 18, color: "rgba(0,0,0,0.6)" }} />
+                            </Box>
+                          </Tooltip>
                         </TableCell>
                         <TableCell />
                         <TableCell align="right">
-                          <Typography sx={{color: "#2E2E2E"}} fontWeight="bold">
+                          <Typography sx={{ color: "#2E2E2E" }} fontWeight="bold">
                             {totalKomisiPribadi.toLocaleString()}
                           </Typography>
                         </TableCell>
                         <TableCell />
                         <TableCell align="right">
-                          <Typography sx={{color: "#2E2E2E"}} fontWeight="bold">
+                          <Typography sx={{ color: "#2E2E2E" }} fontWeight="bold">
                             {totalKomisiPerbaikan.toLocaleString()}
                           </Typography>
                         </TableCell>
                         <TableCell align="right">
-                          <Typography sx={{color: "#2E2E2E"}} fontWeight="bold">
+                          <Typography sx={{ color: "#2E2E2E" }} fontWeight="bold">
                             {totalJumlah.toLocaleString()}
                           </Typography>
                         </TableCell>
@@ -290,7 +313,6 @@ const Commissions = () => {
                           <TableCell align="right">
                             {++idx}
                           </TableCell>
-                          <TableCell>#SK{row.nopendaftaran}#</TableCell>
                           <TableCell>
                             {row?.tanggal
                               ? moment(row.tanggal).format("DD/MM/YYYY")
@@ -339,7 +361,7 @@ const Commissions = () => {
                   }}
                 >
                   <TableCell></TableCell>
-                  <TableCell colSpan={6}>Jumlah</TableCell>
+                  <TableCell colSpan={5}>Jumlah</TableCell>
                   <TableCell align="right">{totalJumlahGigi}</TableCell>
                   <TableCell align="right">
                     {formatCurrency(totalBiayaPasang)}
@@ -422,7 +444,7 @@ const Commissions = () => {
                       <TableRow>
                         <TableCell>Lunas</TableCell>
                         <TableCell>
-                          {groupByStatus["G"] || 0}
+                          {groupByStatus["L"] || 0}
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -435,6 +457,12 @@ const Commissions = () => {
                         <TableCell>Garansi</TableCell>
                         <TableCell>
                           {groupByStatus["G"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Ambil</TableCell>
+                        <TableCell>
+                          {groupByStatus["A"] || 0}
                         </TableCell>
                       </TableRow>
                       <TableRow>

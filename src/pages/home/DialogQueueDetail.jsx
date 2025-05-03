@@ -39,6 +39,7 @@ import { Close, Print } from "@mui/icons-material";
 import { useFetchDeposit } from "../../hooks/useFetchDeposit";
 import { Controller, useForm } from "react-hook-form";
 import usePdfStore from "../../store/pdfStore";
+import useAlertStore from "../../store/alertStore";
 
 const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
   const { data: masterTindakan, isFetching: isFetchingMasterTindakan } =
@@ -50,6 +51,8 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
     enabled: false,
   });
 
+  const { showAlert } = useAlertStore.getState()
+
   const { openDialog, setPdfURL, setLoading, setError } = usePdfStore();
 
   const mutation = useUpdateQueue();
@@ -59,10 +62,10 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     watch,
   } = useForm({
-    defaultValues: { ...queue, kdtindakan: "01" },
+    defaultValues: { ...queue },
   });
 
   const deposit = useFetchDeposit(watch("nomorpasien"), watch("iddp"));
@@ -89,7 +92,13 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
 
   const handleTarifChange = (e, field) => {
     const value = Number(e.target.value.replace(/\D/g, ""));
-    field.onChange(value || "");
+    field.onChange(value);
+
+    const gigiVal = watch("jml_gigi");
+    const shiftVal = watch("kdshift");
+    if (gigiVal && shiftVal) {
+      updateKomisiByPelayanan(shiftVal, gigiVal);
+    }
   };
 
   const handleBiayaPerbaikanChange = (e, field) => {
@@ -115,6 +124,12 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
         isDpExist && newKode !== "03" ? resolvedDP?.tarif_per_gigi : 0
       );
     }
+    setValue("komisi_kolektif", 0);
+    setValue("komisi_pribadi", 0);
+    setValue("komisi_perbaikan", 0);
+    setValue("nkomisi_kolektif", 0);
+    setValue("nkomisi_pribadi", 0);
+    setValue("kdshift", null);
   };
 
   const handlePrintInvoice = async () => {
@@ -145,12 +160,14 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
       setIsPrintable(true);
     } catch (err) {
       console.error(err);
+      showAlert(err?.message || "Gagal Menyimpan Data", "error");
     }
   };
 
   const updateKomisiByPelayanan = (nextKdshift, nextJmlGigi) => {
     const item = safeArray(masterPelayanan).find(
-      (el) => el.kdshift === nextKdshift && el.jml_gigi === nextJmlGigi
+      (el) => el.kdshift === nextKdshift && el.jml_gigi === nextJmlGigi &&
+        el.kategori === kategoriMap[watch("tarif")]
     );
 
     if (item) {
@@ -307,31 +324,25 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                     <Controller
                       name="tarif"
                       control={control}
-                      rules={{ required: "Tarif per gigi wajib dipilih" }}
+                      rules={{
+                        required: "Tarif per gigi wajib dipilih",
+                        validate: v => Number(v) > 0 || "Tarif tidak boleh 0"
+                      }}
                       render={({ field }) => (
-                        <FormControl fullWidth>
+                        <FormControl fullWidth error={!!errors.tarif}>
                           <FormLabel>Tarif Per Gigi</FormLabel>
                           <RadioGroup
                             row
                             {...field}
                             onChange={(e) => handleTarifChange(e, field)}
                           >
-                            <FormControlLabel
-                              value={40000}
-                              control={<Radio />}
-                              label="40.000"
-                            />
-                            <FormControlLabel
-                              value={60000}
-                              control={<Radio />}
-                              label="60.000"
-                            />
-                            <FormControlLabel
-                              value={160000}
-                              control={<Radio />}
-                              label="160.000"
-                            />
+                            <FormControlLabel value="40000" control={<Radio />} label="40.000" />
+                            <FormControlLabel value="60000" control={<Radio />} label="60.000" />
+                            <FormControlLabel value="160000" control={<Radio />} label="160.000" />
                           </RadioGroup>
+                          {errors.tarif && (
+                            <FormHelperText>{errors.tarif.message}</FormHelperText>
+                          )}
                         </FormControl>
                       )}
                     />
@@ -380,7 +391,10 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                     <Controller
                       name="kdshift"
                       control={control}
-                      rules={{ required: "Shift wajib dipilih" }}
+                      rules={{
+                        required: "Shift wajib dipilih",
+                        validate: (value) => value !== null && value !== "" || "Shift wajib dipilih"
+                      }}
                       render={({ field }) => (
                         <Autocomplete
                           options={safeArray(masterShift)}
@@ -391,7 +405,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                             ) || null
                           }
                           onChange={(_, newValue) => {
-                            const nextVal = String(newValue?.kdshift || "");
+                            const nextVal = String(newValue?.kdshift);
                             field.onChange(nextVal);
 
                             const gigiVal = watch("jml_gigi");
@@ -584,9 +598,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   {/* Total Akhir selalu ditampilkan */}
                   <TableRow>
                     <TableCell>
-                      <Typography fontWeight="bold">Total Akhir
-                        {/* ({totalSetelahDP >= 0 ? "Sisa Pembayaran" : "Pembayaran"}) */}
-                      </Typography>
+                      <Typography fontWeight="bold">Total Akhir</Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Typography fontWeight="bold">

@@ -3,7 +3,7 @@ import moment from 'moment'
 import React from 'react'
 import { formatCurrency } from '../../../utils/common'
 
-const HistoryPatient = ({listQueue = {}}) => {
+const HistoryPatient = ({ listQueue = {} }) => {
   const { isLoading, error, data: rincianData } = listQueue
   return (
     <>
@@ -40,12 +40,12 @@ const HistoryPatient = ({listQueue = {}}) => {
                 <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Tanggal Transaksi
                 </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                {/* <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Invoice
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Nama Pasien
-                </TableCell>
+                </TableCell> */}
                 <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Tindakan
                 </TableCell>
@@ -59,7 +59,13 @@ const HistoryPatient = ({listQueue = {}}) => {
                   Tarif Gigi
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                  Biaya Perbaikan
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Total Biaya
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                  Deposit
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Keterangan
@@ -67,23 +73,28 @@ const HistoryPatient = ({listQueue = {}}) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {rincianData.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    {row?.tanggal_pelaks
-                      ? moment(row?.tanggal_pelaks).format("DD-MM-YYYY")
-                      : ""}
-                  </TableCell>
-                  <TableCell>#SK{row.nopendaftaran}#</TableCell>
-                  <TableCell>{row.nmpasien}</TableCell>
-                  <TableCell>{row?.nama_tindakan || "-"}</TableCell>
-                  <TableCell>{row?.nama_karyawan || "-"}</TableCell>
-                  <TableCell>{row?.jml_gigi || "-"}</TableCell>
-                  <TableCell>{(row?.tarif || 0).toLocaleString()}</TableCell>
-                  <TableCell>{formatCurrency(row.total_biaya)}</TableCell>
-                  <TableCell>{row?.nama_keterangan || "-"}</TableCell>
-                </TableRow>
-              ))}
+              {rincianData.map((row) => {
+                const isDeposit = row?.ket === "D"
+                return (
+                  <TableRow key={row.id}>
+                    <TableCell>
+                      {row?.tanggal_pelaks
+                        ? moment(row?.tanggal_pelaks).format("DD-MM-YYYY")
+                        : ""}
+                    </TableCell>
+                    {/* <TableCell>#SK{row.nopendaftaran}#</TableCell>
+                    <TableCell>{row.nmpasien}</TableCell> */}
+                    <TableCell>{row?.nama_tindakan || "-"}</TableCell>
+                    <TableCell>{isDeposit && row?.detail_deposit ? row?.detail_deposit.karyawan.nmkaryawan : row?.nama_karyawan || "-"}</TableCell>
+                    <TableCell>{isDeposit && row?.detail_deposit ? row.detail_deposit.jumlah_gigi : row?.jml_gigi || "-"}</TableCell>
+                    <TableCell>{(isDeposit && row?.detail_deposit ? row?.detail_deposit.tarif_per_gigi : row?.tarif || 0).toLocaleString()}</TableCell>
+                    <TableCell>{(isDeposit && row?.biaya_perbaikan || 0).toLocaleString()}</TableCell>
+                    <TableCell>{formatCurrency(row.total_biaya + row.biaya_perbaikan)}</TableCell>
+                    <TableCell>{isDeposit && row?.detail_deposit ? formatCurrency(row.detail_deposit.jumlah) : "-"}</TableCell>
+                    <TableCell>{row?.nama_keterangan || "-"}</TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </TableContainer>

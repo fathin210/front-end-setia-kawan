@@ -103,13 +103,13 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
 
   const handleBiayaPerbaikanChange = (e, field) => {
     const value = Number(e.target.value.replace(/\D/g, ""));
-    field.onChange(value || "");
+    field.onChange(value);
   };
 
-  const handleTindakanChange = (e) => {
+  const handleTindakanChange = (e, field) => {
     const newKode = e.target.value;
 
-    setValue("kdtindakan", newKode); // wajib untuk form state
+    field.onChange(newKode); // wajib untuk form state
 
     if (newKode === "03") {
       setValue("dp", 0);
@@ -124,6 +124,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
         isDpExist && newKode !== "03" ? resolvedDP?.tarif_per_gigi : 0
       );
     }
+    setValue("biaya_perbaikan", 0);
     setValue("komisi_kolektif", 0);
     setValue("komisi_pribadi", 0);
     setValue("komisi_perbaikan", 0);
@@ -245,7 +246,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   Teknisi
                 </Typography>
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <Controller
                   name="idkaryawan"
                   control={control}
@@ -266,7 +267,6 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                         <TextField
                           {...params}
                           label="Nama Teknisi"
-                          fullWidth
                           error={Boolean(errors.idkaryawan)}
                           helperText={errors.idkaryawan?.message}
                         />
@@ -278,20 +278,20 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
 
               {/* Pilih Tindakan */}
               <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <FormLabel>Tindakan</FormLabel>
-                  {isFetchingMasterTindakan ? (
-                    <CircularProgress />
-                  ) : (
-                    <Controller
-                      name="kdtindakan"
-                      control={control}
-                      rules={{ required: "Tindakan wajib dipilih" }}
-                      render={({ field }) => (
+                <Controller
+                  name="kdtindakan"
+                  control={control}
+                  rules={{ required: "Tindakan wajib dipilih" }}
+                  render={({ field }) => (
+                    <FormControl fullWidth error={!!errors.kdtindakan}>
+                      <FormLabel>Tindakan</FormLabel>
+                      {isFetchingMasterTindakan ? (
+                        <CircularProgress />
+                      ) : (
                         <RadioGroup
                           row
                           {...field}
-                          onChange={handleTindakanChange}
+                          onChange={(e) => handleTindakanChange(e, field)}
                         >
                           {safeArray(masterTindakan).map((item) => (
                             <FormControlLabel
@@ -303,12 +303,12 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                           ))}
                         </RadioGroup>
                       )}
-                    />
+                      {errors.kdtindakan && (
+                        <FormHelperText>{errors.kdtindakan.message}</FormHelperText>
+                      )}
+                    </FormControl>
                   )}
-                  {errors.kdtindakan && (
-                    <FormHelperText>{errors.kdtindakan.message}</FormHelperText>
-                  )}
-                </FormControl>
+                />
               </Grid>
 
               {["01", "04"].includes(watch("kdtindakan")) && (
@@ -349,7 +349,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   </Grid>
 
                   {/* Jumlah Gigi */}
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6}>
                     <Controller
                       name="jml_gigi"
                       control={control}
@@ -387,7 +387,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   </Grid>
 
                   {/* Shift */}
-                  <Grid item xs={12} sm={4}>
+                  <Grid item xs={12} sm={6}>
                     <Controller
                       name="kdshift"
                       control={control}
@@ -428,7 +428,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   </Grid>
 
                   {/* Komisi - read only */}
-                  <Grid item xs={6} sm={4}>
+                  <Grid item xs={6} sm={6}>
                     <Controller
                       name="komisi_kolektif"
                       control={control}
@@ -446,7 +446,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                       )}
                     />
                   </Grid>
-                  <Grid item xs={6} sm={4}>
+                  <Grid item xs={6} sm={6}>
                     <Controller
                       name="komisi_pribadi"
                       control={control}
@@ -477,7 +477,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   </Grid>
 
                   {/* Shift */}
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6}>
                     <Controller
                       name="kdshift"
                       control={control}
@@ -510,39 +510,44 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
 
                   {/* Biaya Perbaikan */}
                   <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <FormLabel>Biaya Perbaikan</FormLabel>
-                      <Stack direction="row" spacing={2}>
-                        {/* Radio Buttons for Biaya */}
-                        <Controller
-                          name="biaya_perbaikan"
-                          control={control}
-                          rules={{
-                            required: "Biaya perbaikan wajib diisi",
-                          }}
-                          render={({ field }) => (
-                            <RadioGroup
-                              row
-                              {...field}
-                              onChange={(e) => handleBiayaPerbaikanChange(e, field)}
-                            >
-                              {[30000, 50000, 80000, 100000].map((val) => (
-                                <FormControlLabel
-                                  key={val}
-                                  control={<Radio />}
-                                  value={val}
-                                  label={formatCurrency(val)}
-                                />
-                              ))}
-                            </RadioGroup>
-                          )}
-                        />
+                    <Controller
+                      name="biaya_perbaikan"
+                      control={control}
+                      rules={{
+                        required: "Biaya perbaikan wajib diisi",
+                        validate: (value) => Number(value) > 0 || "Biaya tidak boleh 0",
+                      }}
+                      render={({ field }) => (
+                        <FormControl fullWidth error={!!errors.biaya_perbaikan}>
+                          <FormLabel>Biaya Perbaikan</FormLabel>
+                          <Stack direction="row" spacing={2}>
+                            {/* Radio Buttons for Biaya */}
+                            <Controller
+                              name="biaya_perbaikan"
+                              control={control}
+                              rules={{
+                                required: "Biaya perbaikan wajib diisi",
+                                validate: (value) => Number(value) > 0 || "Biaya tidak boleh 0",
+                              }}
+                              render={({ field }) => (
+                                <RadioGroup
+                                  row
+                                  {...field}
+                                  onChange={(e) => handleBiayaPerbaikanChange(e, field)}
+                                >
+                                  {["30000", "50000", "80000", "100000"].map((val) => (
+                                    <FormControlLabel
+                                      key={val}
+                                      control={<Radio />}
+                                      value={val}
+                                      label={formatCurrency(val)}
+                                    />
+                                  ))}
+                                </RadioGroup>
+                              )}
+                            />
 
-                        {/* TextField for Custom Biaya */}
-                        <Controller
-                          name="biaya_perbaikan"
-                          control={control}
-                          render={({ field }) => (
+                            {/* TextField for Custom Biaya */}
                             <TextField
                               {...field}
                               label="Harga"
@@ -552,11 +557,10 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                               value={field.value ? formatCurrency(field.value) : ""}
                               onChange={(e) => handleBiayaPerbaikanChange(e, field)}
                             />
-                          )}
-                        />
-
-                      </Stack>
-                    </FormControl>
+                          </Stack>
+                        </FormControl>
+                      )}
+                    />
                   </Grid>
                 </>
               )}

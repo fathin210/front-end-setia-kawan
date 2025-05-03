@@ -7,16 +7,6 @@ import {
   Button,
   Typography,
   Stack,
-  CircularProgress,
-  Box,
-  Divider,
-  TableContainer,
-  Paper,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   Autocomplete,
   TextField,
   IconButton,
@@ -25,7 +15,7 @@ import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
 import useListQueue from "../../hooks/useListQueue";
-import { formatCurrency, safeArray } from "../../utils/common";
+import { safeArray } from "../../utils/common";
 import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
 import { Close } from "@mui/icons-material";
 import HistoryPatient from "../patient/detail-patient/HistoryPatient";
@@ -49,7 +39,7 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
   const mutation = useAddToQueueMutation(onClose);
 
   return (
-    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="lg">
       <DialogTitle>Tambah ke Antrian</DialogTitle>
       <IconButton
         aria-label="close"

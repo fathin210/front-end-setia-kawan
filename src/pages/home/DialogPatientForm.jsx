@@ -163,7 +163,7 @@ const DialogPatientForm = ({ isOpen, handleDialog, editData }) => {
               </Box>
             </Stack>
             <Box>
-              <Typography>Tanggal Lahir</Typography>
+              <Typography>Alamat</Typography>
               <Controller
                 name="alamat"
                 control={control}

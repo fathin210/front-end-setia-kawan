@@ -19,6 +19,7 @@ import {
   InputAdornment,
   Typography,
   CircularProgress,
+  Stack,
 } from "@mui/material";
 import { Edit, Delete, Search, Close } from "@mui/icons-material";
 import { useFetchKaryawan } from "../../../hooks/useFetchKaryawan";
@@ -28,6 +29,9 @@ import {
   useUpdateKaryawan,
 } from "../../../hooks/useMutateKaryawan";
 import { useDebouncedCallback } from "use-debounce";
+import moment from "moment";
+import { DesktopDatePicker } from "@mui/x-date-pickers";
+import { useForm, Controller } from "react-hook-form";
 
 const defaultForm = {
   idkaryawan: "",
@@ -36,6 +40,9 @@ const defaultForm = {
   alamat: "",
   telp: "",
   noktp: "",
+  temp_lahir: "",
+  tgl_lahir: null,
+  tmt_kerja: null,
 };
 
 const AdminEmployee = () => {
@@ -51,43 +58,39 @@ const AdminEmployee = () => {
   const deleteMutation = useDeleteKaryawan();
 
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(defaultForm);
   const [editing, setEditing] = useState(false);
-  const [error, setError] = useState("");
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({ defaultValues: defaultForm });
 
   const handleOpen = (karyawan) => {
-    setForm(karyawan || defaultForm);
+    reset(karyawan || defaultForm);
     setEditing(!!karyawan);
-    setError("");
     setOpen(true);
   };
 
   const handleClose = () => {
-    setForm(defaultForm);
+    reset(defaultForm);
     setEditing(false);
     setOpen(false);
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async () => {
-    if (!form.nmkaryawan || !form.jabatan) {
-      setError("Nama dan Jabatan wajib diisi.");
-      return;
-    }
-
+  const onSubmit = async (data) => {
     try {
       if (editing) {
-        await updateMutation.mutateAsync(form);
+        await updateMutation.mutateAsync(data);
       } else {
-        await createMutation.mutateAsync(form);
+        await createMutation.mutateAsync(data);
       }
       refetch();
       handleClose();
     } catch (err) {
-      setError("Gagal menyimpan data.");
+      console.error(err);
     }
   };
 
@@ -106,14 +109,7 @@ const AdminEmployee = () => {
 
   return (
     <Box p={2}>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        flexWrap="wrap"
-        rowGap={2}
-        mb={2}
-      >
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6">Daftar Karyawan</Typography>
         <Button variant="contained" onClick={() => handleOpen()}>
           Tambah
@@ -123,10 +119,7 @@ const AdminEmployee = () => {
       <Box mb={2}>
         <TextField
           placeholder="Cari Karyawan"
-          name="search"
-          onChange={(event) => debouncedSetSearch(event.target.value)}
-          fullWidth
-          autoComplete="off"
+          onChange={(e) => debouncedSetSearch(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -144,9 +137,7 @@ const AdminEmployee = () => {
       )}
 
       {errorFetching && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Terjadi kesalahan saat mengambil data: {errorFetching.message}
-        </Alert>
+        <Alert severity="error">Terjadi kesalahan: {errorFetching.message}</Alert>
       )}
 
       {!isLoading && !errorFetching && (
@@ -156,111 +147,117 @@ const AdminEmployee = () => {
               <TableRow>
                 <TableCell>ID</TableCell>
                 <TableCell>Nama</TableCell>
+                <TableCell>Tempat Lahir</TableCell>
+                <TableCell>Tanggal Lahir</TableCell>
                 <TableCell>Jabatan</TableCell>
                 <TableCell>Alamat</TableCell>
-                <TableCell>Telp</TableCell>
+                <TableCell>Masa Kerja</TableCell>
                 <TableCell>Aksi</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {karyawans?.map((row) => (
-                <TableRow key={row.idkaryawan}>
-                  <TableCell>{row.idkaryawan}</TableCell>
-                  <TableCell>{row.nmkaryawan}</TableCell>
-                  <TableCell>{row.jabatan}</TableCell>
-                  <TableCell>{row.alamat}</TableCell>
-                  <TableCell>{row.telp || "-"}</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleOpen(row)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(row.idkaryawan)}>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {karyawans?.map((row) => {
+                const durasi = moment.duration(moment().diff(row?.tmt_kerja));
+                return (
+                  <TableRow key={row.idkaryawan}>
+                    <TableCell>{row.idkaryawan}</TableCell>
+                    <TableCell>{row.nmkaryawan}</TableCell>
+                    <TableCell>{row.temp_lahir}</TableCell>
+                    <TableCell>{row.tgl_lahir ? moment(row.tgl_lahir).format("DD-MM-YYYY") : ""}</TableCell>
+                    <TableCell>{row.jabatan}</TableCell>
+                    <TableCell>{row.alamat}</TableCell>
+                    <TableCell>{`${durasi.years()} Th ${durasi.months()} Bln ${durasi.days()} Hr`}</TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleOpen(row)}><Edit /></IconButton>
+                      <IconButton onClick={() => handleDelete(row.idkaryawan)}><Delete /></IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
       )}
+
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-        <DialogTitle>
-          {editing ? "Edit Karyawan" : "Tambah Karyawan"}
-        </DialogTitle>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          sx={() => ({
-            position: "absolute",
-            right: 8,
-            top: 8,
-          })}
-        >
+        <DialogTitle>{editing ? "Edit Karyawan" : "Tambah Karyawan"}</DialogTitle>
+        <IconButton aria-label="close" onClick={handleClose} sx={{ position: "absolute", right: 8, top: 8 }}>
           <Close color="error" />
         </IconButton>
-        <DialogContent>
-          <TextField
-            autoComplete="off"
-            margin="normal"
-            fullWidth
-            name="idkaryawan"
-            label="ID Karyawan"
-            value={form.idkaryawan}
-            onChange={handleChange}
-            disabled={editing}
-          />
-          <TextField
-            autoComplete="off"
-            margin="normal"
-            fullWidth
-            name="nmkaryawan"
-            label="Nama Karyawan"
-            value={form.nmkaryawan}
-            onChange={handleChange}
-          />
-          <TextField
-            autoComplete="off"
-            margin="normal"
-            fullWidth
-            name="jabatan"
-            label="Jabatan"
-            value={form.jabatan}
-            onChange={handleChange}
-          />
-          <TextField
-            autoComplete="off"
-            margin="normal"
-            fullWidth
-            name="noktp"
-            label="No. KTP"
-            value={form.noktp}
-            onChange={handleChange}
-          />
-          <TextField
-            autoComplete="off"
-            margin="normal"
-            fullWidth
-            name="alamat"
-            label="Alamat"
-            value={form.alamat}
-            onChange={handleChange}
-          />
-          <TextField
-            autoComplete="off"
-            margin="normal"
-            fullWidth
-            name="telp"
-            label="No. Telp"
-            value={form.telp}
-            onChange={handleChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button variant="contained" onClick={handleSubmit}>
-            Simpan
-          </Button>
-        </DialogActions>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogContent>
+            <TextField
+              label="ID Karyawan"
+              fullWidth
+              margin="normal"
+              {...register("idkaryawan")}
+              disabled={editing}
+            />
+            <TextField
+              label="Nama Karyawan"
+              fullWidth
+              margin="normal"
+              {...register("nmkaryawan", { required: true })}
+              error={!!errors.nmkaryawan}
+              helperText={errors.nmkaryawan && "Nama wajib diisi"}
+            />
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Tempat Lahir"
+                sx={{ flex: 1 }}
+                margin="normal"
+                {...register("temp_lahir")}
+              />
+              <Controller
+                name="tgl_lahir"
+                control={control}
+                render={({ field }) => (
+                  <DesktopDatePicker
+                    {...field}
+                    label="Tanggal Lahir"
+                    inputFormat="DD/MM/YYYY"
+                    value={field.value ? moment(field.value) : null}
+                    onChange={(date) => field.onChange(date)}
+                    renderInput={(params) => (
+                      <TextField
+                        sx={{ flex: 1 }}
+                        margin="normal" {...params} />
+                    )}
+                  />
+                )}
+              />
+            </Stack>
+            <TextField
+              label="No. KTP"
+              fullWidth
+              margin="normal"
+              {...register("noktp")}
+            />
+            <TextField
+              label="Alamat"
+              fullWidth
+              margin="normal"
+              {...register("alamat")}
+            />
+            <TextField
+              label="No. Telp"
+              fullWidth
+              margin="normal"
+              {...register("telp")}
+            />
+            <TextField
+              label="Jabatan"
+              fullWidth
+              margin="normal"
+              {...register("jabatan", { required: true })}
+              error={!!errors.jabatan}
+              helperText={errors.jabatan && "Jabatan wajib diisi"}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button type="submit" variant="contained">Simpan</Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Box>
   );

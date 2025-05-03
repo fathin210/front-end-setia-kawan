@@ -11,8 +11,6 @@ import {
   Stack,
   CircularProgress,
   Alert,
-  Tabs,
-  Tab,
   IconButton,
   Menu,
   MenuItem,
@@ -23,7 +21,6 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import moment from "moment";
-import { DatePicker, DesktopDatePicker } from "@mui/x-date-pickers";
 import { safeArray } from "../../../utils/common";
 import { useFetchDeposit } from "../../../hooks/useFetchDeposit";
 import { Delete, Edit, MoreVert, Print } from "@mui/icons-material";
@@ -38,8 +35,6 @@ const Deposit = () => {
   const deleteMutation = useDeleteDeposit();
   const { openDialog, setPdfURL, setLoading, setError } = usePdfStore();
 
-  const [mode, setMode] = useState("harian");
-  const [date, setDate] = useState(moment());
   const [anchorEl, setAnchorEl] = useState(null);
   const [dialog, setDialog] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
@@ -72,7 +67,7 @@ const Deposit = () => {
     try {
       await deleteMutation.mutateAsync(selectedData);
       handleCloseDialog();
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handlePrintDeposit = async () => {
@@ -101,44 +96,6 @@ const Deposit = () => {
         <Typography variant="h6" mb={2}>
           Deposit
         </Typography>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Tabs
-            value={mode}
-            onChange={(_, newValue) => setMode(newValue)}
-            textColor="primary"
-            indicatorColor="primary"
-          >
-            <Tab label="Harian" value="harian" />
-            <Tab label="Bulanan" value="bulanan" />
-          </Tabs>
-
-          {mode === "harian" ? (
-            <DesktopDatePicker
-              format="DD/MM/YYYY"
-              label="Tanggal"
-              value={date}
-              onChange={(value) => {
-                if (value) setDate(moment(value));
-              }}
-              slotProps={{
-                actionBar: {
-                  actions: ["today"],
-                },
-              }}
-            />
-          ) : (
-            <DatePicker
-              views={["year", "month"]}
-              label="Pilih Bulan"
-              maxDate={moment()}
-              value={date}
-              format="MM/YYYY"
-              onChange={(value) => {
-                if (value) setDate(moment(value));
-              }}
-            />
-          )}
-        </Stack>
       </Stack>
       {isLoading && (
         <Box display="flex" justifyContent="center" mt={3}>
@@ -162,7 +119,7 @@ const Deposit = () => {
                 <TableCell>No</TableCell>
                 <TableCell>Tanggal Transaksi</TableCell>
                 <TableCell>Tanggal Diambil</TableCell>
-                <TableCell>Invoice</TableCell>
+                <TableCell>ID Pasien</TableCell>
                 <TableCell>Nama Pasien</TableCell>
                 <TableCell>No. Telpon</TableCell>
                 <TableCell>Alamat</TableCell>
@@ -187,7 +144,7 @@ const Deposit = () => {
                       ? moment(row.tanggal_diambil).format("DD/MM/YYYY")
                       : ""}
                   </TableCell>
-                  <TableCell>#SK{row.nodp}#</TableCell>
+                  <TableCell>{row.nomorpasien}</TableCell>
                   <TableCell>{row.nmpasien}</TableCell>
                   <TableCell>{row.telp}</TableCell>
                   <TableCell>{row.alamat}</TableCell>

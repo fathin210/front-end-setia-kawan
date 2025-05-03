@@ -34,7 +34,7 @@ const PatientCard = ({ data }) => {
   const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
-  const { isFetching, refetch } = useFetchPDFCard(data.idpasien, {
+  const { isFetching, refetch } = useFetchPDFCard(data.idpasien, data.nomorpasien, {
     enabled: false,
   });
 

@@ -10,6 +10,9 @@ import {
   Autocomplete,
   TextField,
   IconButton,
+  Divider,
+  Box,
+  Grid,
 } from "@mui/material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
@@ -54,60 +57,100 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
         <Close color="error" />
       </IconButton>
       <DialogContent>
-        <Stack spacing={2}>
-          <Typography variant="body1">
-            <strong>Nama:</strong> {patient?.nmpasien || "-"}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Nomor Pasien:</strong> {patient?.nomorpasien || "-"}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Alamat:</strong> {patient?.alamat || "-"}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Tanggal Antrian</strong>
-          </Typography>
-          <DesktopDatePicker
-            sx={{ flex: 1 }}
-            format="DD/MM/YYYY"
-            label="Tanggal Antrian"
-            value={draft?.tanggal_pelaks ? moment(draft?.tanggal_pelaks) : null}
-            onChange={(value) => {
-              if (value) {
-                setDraft({
-                  ...draft,
-                  tanggal_pelaks: moment(value).format("YYYY-MM-DD"),
-                });
-              }
-            }}
-            slotProps={{
-              actionBar: {
-                actions: ["today"],
-              },
-            }}
-          />
-          <Typography variant="body1">
-            <strong>Teknisi</strong>
-          </Typography>
-          <Autocomplete
-            options={safeArray(masterKaryawan)}
-            getOptionLabel={(option) => option?.nmkaryawan || ""}
-            value={
-              safeArray(masterKaryawan).find(
-                (emp) => emp.idkaryawan === draft?.idkaryawan
-              ) || null
-            }
-            onChange={(_, newValue) =>
-              setDraft((prev) => ({
-                ...prev,
-                idkaryawan: newValue?.idkaryawan,
-              }))
-            }
-            renderInput={(params) => (
-              <TextField {...params} label="Nama Teknisi" fullWidth />
-            )}
-          />
-          <HistoryPatient listQueue={listQueue} />
+        <Stack spacing={3}>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Detail Pasien
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Typography variant="body2" color="textSecondary">
+                  Nama
+                </Typography>
+                <Typography variant="body1">
+                  {patient?.nmpasien || "-"}
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body2" color="textSecondary">
+                  Nomor Pasien
+                </Typography>
+                <Typography variant="body1">
+                  {patient?.nomorpasien || "-"}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="body2" color="textSecondary">
+                  Alamat
+                </Typography>
+                <Typography variant="body1">
+                  {patient?.alamat || "-"}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Divider />
+
+          <Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="h6" gutterBottom>
+                  Tanggal Antrian
+                </Typography>
+                <DesktopDatePicker
+                  sx={{ width: "100%" }}
+                  format="DD/MM/YYYY"
+                  value={draft?.tanggal_pelaks ? moment(draft?.tanggal_pelaks) : null}
+                  onChange={(value) => {
+                    if (value) {
+                      setDraft({
+                        ...draft,
+                        tanggal_pelaks: moment(value).format("YYYY-MM-DD"),
+                      });
+                    }
+                  }}
+                  slotProps={{
+                    actionBar: {
+                      actions: ["today"],
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="h6" gutterBottom>
+                  Teknisi
+                </Typography>
+                <Autocomplete
+                  options={safeArray(masterKaryawan)}
+                  getOptionLabel={(option) => option?.nmkaryawan || ""}
+                  value={
+                    safeArray(masterKaryawan).find(
+                      (emp) => emp.idkaryawan === draft?.idkaryawan
+                    ) || null
+                  }
+                  onChange={(_, newValue) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      idkaryawan: newValue?.idkaryawan,
+                    }))
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Nama Teknisi" fullWidth />
+                  )}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Divider />
+
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Riwayat Antrian
+            </Typography>
+            <HistoryPatient listQueue={listQueue} />
+          </Box>
         </Stack>
       </DialogContent>
       <DialogActions>

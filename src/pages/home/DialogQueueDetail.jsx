@@ -261,7 +261,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                         ) || null
                       }
                       onChange={(_, newValue) => {
-                        field.onChange(newValue?.idkaryawan || "");
+                        field.onChange(newValue?.idkaryawan || undefined);
                       }}
                       renderInput={(params) => (
                         <TextField
@@ -363,7 +363,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                           getOptionLabel={(opt) => String(opt)}
                           value={field.value || null}
                           onChange={(_, newValue) => {
-                            const nextVal = newValue || null;
+                            const nextVal = newValue || undefined;
                             field.onChange(nextVal);
 
                             const shiftVal = watch("kdshift");
@@ -405,7 +405,7 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                             ) || null
                           }
                           onChange={(_, newValue) => {
-                            const nextVal = String(newValue?.kdshift);
+                            const nextVal = newValue?.kdshift ? String(newValue?.kdshift) : undefined;
                             field.onChange(nextVal);
 
                             const gigiVal = watch("jml_gigi");

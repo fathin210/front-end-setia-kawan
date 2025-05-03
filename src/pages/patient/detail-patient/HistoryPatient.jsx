@@ -40,12 +40,6 @@ const HistoryPatient = ({ listQueue = {} }) => {
                 <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Tanggal Transaksi
                 </TableCell>
-                {/* <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Invoice
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Nama Pasien
-                </TableCell> */}
                 <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Tindakan
                 </TableCell>
@@ -74,7 +68,7 @@ const HistoryPatient = ({ listQueue = {} }) => {
             </TableHead>
             <TableBody>
               {rincianData.map((row) => {
-                const isDeposit = row?.ket === "D"
+                const isDeposit = row?.ket === "D" && row?.detail_deposit
                 return (
                   <TableRow key={row.id}>
                     <TableCell>
@@ -82,15 +76,13 @@ const HistoryPatient = ({ listQueue = {} }) => {
                         ? moment(row?.tanggal_pelaks).format("DD-MM-YYYY")
                         : ""}
                     </TableCell>
-                    {/* <TableCell>#SK{row.nopendaftaran}#</TableCell>
-                    <TableCell>{row.nmpasien}</TableCell> */}
                     <TableCell>{row?.nama_tindakan || "-"}</TableCell>
-                    <TableCell>{isDeposit && row?.detail_deposit ? row?.detail_deposit.karyawan.nmkaryawan : row?.nama_karyawan || "-"}</TableCell>
-                    <TableCell>{isDeposit && row?.detail_deposit ? row.detail_deposit.jumlah_gigi : row?.jml_gigi || "-"}</TableCell>
-                    <TableCell>{(isDeposit && row?.detail_deposit ? row?.detail_deposit.tarif_per_gigi : row?.tarif || 0).toLocaleString()}</TableCell>
-                    <TableCell>{(isDeposit && row?.biaya_perbaikan || 0).toLocaleString()}</TableCell>
-                    <TableCell>{formatCurrency(row.total_biaya + row.biaya_perbaikan)}</TableCell>
-                    <TableCell>{isDeposit && row?.detail_deposit ? formatCurrency(row.detail_deposit.jumlah) : "-"}</TableCell>
+                    <TableCell>{isDeposit ? row?.detail_deposit.karyawan.nmkaryawan : row?.nama_karyawan || "-"}</TableCell>
+                    <TableCell>{isDeposit ? row.detail_deposit.jumlah_gigi : row?.jml_gigi || "-"}</TableCell>
+                    <TableCell>{(isDeposit ? row?.detail_deposit.tarif_per_gigi : row?.tarif || 0).toLocaleString()}</TableCell>
+                    <TableCell>{(row?.biaya_perbaikan || 0).toLocaleString()}</TableCell>
+                    <TableCell>{formatCurrency(isDeposit ? row.detail_deposit.tarif_per_gigi * row.detail_deposit.jumlah_gigi : row.total_biaya + row.biaya_perbaikan)}</TableCell>
+                    <TableCell>{isDeposit ? formatCurrency(row.detail_deposit.jumlah) : "-"}</TableCell>
                     <TableCell>{row?.nama_keterangan || "-"}</TableCell>
                   </TableRow>
                 )

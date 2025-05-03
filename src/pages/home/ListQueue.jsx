@@ -199,7 +199,7 @@ const ListQueue = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>No.</TableCell>
+                <TableCell>ID</TableCell>
                 <TableCell>Nama</TableCell>
                 <TableCell>Tindakan</TableCell>
                 <TableCell>Teknisi</TableCell>
@@ -213,7 +213,7 @@ const ListQueue = () => {
             <TableBody>
               {safeArray(data).map((row, index) => (
                 <TableRow key={row?.id}>
-                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{row?.nomorpasien || "-"}</TableCell>
                   <TableCell>{row?.nmpasien || "-"}</TableCell>
                   <TableCell>{row?.nama_tindakan || "-"}</TableCell>
                   <TableCell>{row?.nama_karyawan || "-"}</TableCell>

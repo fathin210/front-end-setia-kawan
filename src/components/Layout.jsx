@@ -31,6 +31,8 @@ const Layout = () => {
       "/login",
       "/settings",
       "/employee/comissions",
+      "/employee/admin",
+      "/patient/deposit"
     ];
     if (unexpandedPages.includes(location.pathname)) {
       setOpen(false);

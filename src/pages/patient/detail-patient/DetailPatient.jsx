@@ -8,19 +8,26 @@ import {
   Stack,
   Avatar,
   Button,
+  Dialog,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { Person } from "@mui/icons-material";
 import useListQueue from "../../../hooks/useListQueue";
 import DialogPatientForm from "../../home/DialogPatientForm";
 import usePatientStore from "../../../store/patientStore";
-import { ADD_QUEUE, EDIT_PATIENT } from "../../../constants/variables";
+import { ADD_QUEUE, CONFIRM_DELETE, EDIT_PATIENT } from "../../../constants/variables";
 import DialogQueue from "../../home/DialogQueue";
 import MaleImage from "../../../assets/male.png";
 import FemaleImage from "../../../assets/female.png";
 import HistoryPatient from "./HistoryPatient";
+import { useDeletePatient } from "../../../hooks/useMutatePatient";
+import { useNavigate } from "react-router-dom";
 
 const DetailPatient = () => {
-  const { activePatient } = usePatientStore();
+  const { activePatient, clearActivePatient } = usePatientStore();
+  const deletePatient = useDeletePatient();
+  const navigate = useNavigate();
   const [dialog, setDialog] = useState(false);
 
   const handleDialog = (value) => setDialog(value);
@@ -52,8 +59,8 @@ const DetailPatient = () => {
                 activePatient?.jnskel === "L"
                   ? MaleImage
                   : activePatient?.jnskel === "P"
-                  ? FemaleImage
-                  : undefined // Tidak pakai src kalau gender tidak ada
+                    ? FemaleImage
+                    : undefined // Tidak pakai src kalau gender tidak ada
               }
               sx={{
                 width: 90,
@@ -61,8 +68,8 @@ const DetailPatient = () => {
                 backgroundColor: !activePatient?.jnskel
                   ? "grey.300" // Warna abu-abu untuk gender tidak diketahui
                   : activePatient?.jnskel === "L"
-                  ? "#90caf9"
-                  : "#f48fb1",
+                    ? "#90caf9"
+                    : "#f48fb1",
               }}
             >
               {!activePatient?.jnskel && <Person sx={{ fontSize: 50 }} />}
@@ -102,6 +109,13 @@ const DetailPatient = () => {
               >
                 Tambahkan ke antrian
               </Button>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => handleDialog(CONFIRM_DELETE)}
+              >
+                Hapus Data Pasien
+              </Button>
             </Stack>
           </Stack>
         </CardContent>
@@ -109,6 +123,36 @@ const DetailPatient = () => {
 
       {/* RINCIAN PELAYANAN */}
       <HistoryPatient listQueue={listQueue} />
+
+      {dialog === CONFIRM_DELETE && (
+        <Dialog open>
+          <DialogContent>
+            <Typography>
+              Apakah Anda yakin ingin menghapus data pasien ini?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" color="primary" onClick={() => setDialog(false)}>
+              Tutup
+            </Button>
+            <Button
+              variant="contained"
+              onClick={async () => {
+                try {
+                  await deletePatient.mutateAsync({idpasien: activePatient?.idpasien});
+                  setDialog(false);
+                  clearActivePatient();
+                  navigate("/");
+                } catch (error) { }
+              }}
+              color="error"
+              disabled={deletePatient.isPending}
+            >
+              {deletePatient.isPending ? "Menghapus..." : "Ya, Hapus"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
       {dialog === EDIT_PATIENT && (
         <DialogPatientForm

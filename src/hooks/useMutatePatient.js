@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { postFetcher, putFetcher } from "../utils/fetcher";
+import { deleteFetcher, postFetcher, putFetcher } from "../utils/fetcher";
 import usePatientStore from "../store/patientStore";
 import useAlertStore from "../store/alertStore";
 
@@ -52,4 +52,25 @@ export const useSubmitPatient = ({ editData, onComplete }) => {
       showAlert("Gagal menyimpan data pasien!", "error");
     },
   })
+}
+
+export const useDeletePatient = () => {
+  const { showAlert } = useAlertStore.getState();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ idpasien }) => {
+      return deleteFetcher(`${baseURL}/${idpasien}`);
+    },
+    onMutate: () => {
+      showAlert("Menghapus data pasien...", "waiting");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["patients"]);
+      showAlert("Data pasien berhasil dihapus!", "success");
+    },
+    onError: () => {
+      showAlert("Gagal menghapus data pasien!", "error");
+    },
+  });
 }

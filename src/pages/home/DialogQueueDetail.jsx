@@ -60,7 +60,6 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
   const {
     control,
     handleSubmit,
-    reset,
     setValue,
     formState: { errors },
     watch,

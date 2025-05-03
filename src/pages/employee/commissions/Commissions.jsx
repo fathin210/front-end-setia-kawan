@@ -64,7 +64,7 @@ const calculateTotal = (data, key, condition = () => true) => {
 const calculateCount = (data, key, value) => {
   return safeArray(data).reduce((count, item) => {
     if (item?.[key] === value) {
-      return count + 1;
+      return count + (item?.jml_gigi || 0);
     }
     return count;
   }, 0);

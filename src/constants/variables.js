@@ -6,6 +6,7 @@ export const CLEAR_QUEUE = "CLEAR_QUEUE"
 export const DEPOSIT = "DEPOSIT"
 export const EDIT_PATIENT = "EDIT_PATIENT"
 export const DIALOG_STATUS = "DIALOG_STATUS"
+export const DIALOG_UBAH_ANTRIAN = "DIALOG_UBAH_ANTRIAN"
 
 export const kategoriMap = {
   "160000": "00",

@@ -36,6 +36,7 @@ import {
   CONFIRM_DELETE,
   DEPOSIT,
   DIALOG_STATUS,
+  DIALOG_UBAH_ANTRIAN,
 } from "../../constants/variables";
 import {
   useClearQueueMutation,
@@ -45,6 +46,7 @@ import DialogDeposit from "./DialogDeposit";
 import DialogStatus from "./DialogStatus";
 import usePdfStore from "../../store/pdfStore";
 import { useFetchPDFCard } from "../../hooks/useFetchPDFCard";
+import DialogUbahAntrian from "./DialogUbahAntrian";
 
 const ListQueue = () => {
   const { openDialog, setLoading, setPdfURL, setError } = usePdfStore()
@@ -249,6 +251,14 @@ const ListQueue = () => {
       >
         <MenuItem
           onClick={() => {
+            handleDialogOpen(DIALOG_UBAH_ANTRIAN);
+            handleMenuClose();
+          }}
+        >
+          Ubah Antrian
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
             handleDialogOpen(ADD_QUEUE_DETAIL);
             handleMenuClose();
           }}
@@ -365,6 +375,13 @@ const ListQueue = () => {
       )}
       {dialog === DIALOG_STATUS && (
         <DialogStatus
+          isOpen={true}
+          queue={selectedQueue}
+          onClose={handleDialogClose}
+        />
+      )}
+      {dialog === DIALOG_UBAH_ANTRIAN && (
+        <DialogUbahAntrian
           isOpen={true}
           queue={selectedQueue}
           onClose={handleDialogClose}

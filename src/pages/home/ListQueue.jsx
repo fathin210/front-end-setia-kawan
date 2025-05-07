@@ -128,7 +128,7 @@ const ListQueue = () => {
 
   return (
     <>
-      <Paper sx={{ p: 2, flexGrow: 1, overflow: "auto", height: "calc(85vh - 8px)" }}>
+      <Paper sx={{ p: 2, flexGrow: 1, overflow: "auto", height: "calc(83vh - 8px)" }}>
         <Tabs
           value={status}
           onChange={(_, newValue) => setStatus(newValue)}

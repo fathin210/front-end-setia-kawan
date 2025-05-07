@@ -114,7 +114,7 @@ const ListPatient = () => {
           display: "flex",
           flexDirection: "column",
           gap: 2,
-          height: "calc(85vh - 8px)"
+          height: "calc(83vh - 8px)"
         }}
       >
         <Stack gap={3} sx={{ height: "100%" }}>

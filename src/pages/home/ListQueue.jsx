@@ -29,7 +29,7 @@ import { Close, MoreVert, Search } from "@mui/icons-material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import useListQueue from "../../hooks/useListQueue";
-import DialogQueueDetail from "./DialogQueueDetail";
+import DialogQueueDetail from "./QueueDetailDialog/DialogQueueDetail";
 import {
   ADD_QUEUE_DETAIL,
   CLEAR_QUEUE,
@@ -128,7 +128,7 @@ const ListQueue = () => {
 
   return (
     <>
-      <Paper sx={{ p: 2, flexGrow: 1, overflow: "auto", height: "85vh" }}>
+      <Paper sx={{ p: 2, flexGrow: 1, overflow: "auto", height: "calc(85vh - 8px)" }}>
         <Tabs
           value={status}
           onChange={(_, newValue) => setStatus(newValue)}
@@ -213,10 +213,10 @@ const ListQueue = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {safeArray(data).map((row, index) => (
-                <TableRow key={row?.id}>
+              {safeArray(data).map((row) => (
+                <TableRow key={row?.id} hover>
                   <TableCell>{row?.nomorpasien || "-"}</TableCell>
-                  <TableCell>{row?.nmpasien || "-"}</TableCell>
+                  <TableCell>{row?.nama_pasien || row?.nmpasien || "-"}</TableCell>
                   <TableCell>{row?.nama_tindakan || "-"}</TableCell>
                   <TableCell>{row?.nama_karyawan || "-"}</TableCell>
                   <TableCell>{row?.jml_gigi || "-"}</TableCell>
@@ -303,7 +303,7 @@ const ListQueue = () => {
             handleMenuClose();
           }}
         >
-          Reset Data Rincian
+          Hapus Biaya
         </MenuItem>
       </Menu>
 
@@ -312,7 +312,7 @@ const ListQueue = () => {
         <DialogQueueDetail
           isOpen={dialog === ADD_QUEUE_DETAIL}
           onClose={handleDialogClose}
-          queue={selectedQueue}
+          queueId={selectedQueue.id}
         />
       )}
 

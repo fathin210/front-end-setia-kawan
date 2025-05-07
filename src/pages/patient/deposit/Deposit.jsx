@@ -145,7 +145,7 @@ const Deposit = () => {
                       : ""}
                   </TableCell>
                   <TableCell>{row.nomorpasien}</TableCell>
-                  <TableCell>{row.nmpasien}</TableCell>
+                  <TableCell>{row?.nama_pasien || row?.nmpasien || ""}</TableCell>
                   <TableCell>{row.telp}</TableCell>
                   <TableCell>{row.alamat}</TableCell>
                   <TableCell>{row?.nama_karyawan}</TableCell>

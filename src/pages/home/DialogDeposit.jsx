@@ -135,7 +135,7 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
                     <strong>ID Pasien:</strong> {data?.nomorpasien || "-"}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Nama:</strong> {data?.nmpasien || "-"}
+                    <strong>Nama:</strong> {data?.nama_pasien || data?.nmpasien || "-"}
                   </Typography>
                   <Typography variant="body1">
                     <strong>Alamat:</strong> {data?.alamat || "-"}

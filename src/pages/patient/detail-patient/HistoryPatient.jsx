@@ -59,9 +59,6 @@ const HistoryPatient = ({ listQueue = {} }) => {
                   Total Biaya
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Deposit
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
                   Keterangan
                 </TableCell>
               </TableRow>
@@ -77,12 +74,11 @@ const HistoryPatient = ({ listQueue = {} }) => {
                         : ""}
                     </TableCell>
                     <TableCell>{row?.nama_tindakan || "-"}</TableCell>
-                    <TableCell>{isDeposit ? row?.detail_deposit.karyawan.nmkaryawan : row?.nama_karyawan || "-"}</TableCell>
-                    <TableCell>{isDeposit ? row.detail_deposit.jumlah_gigi : row?.jml_gigi || "-"}</TableCell>
-                    <TableCell>{(isDeposit ? row?.detail_deposit.tarif_per_gigi : row?.tarif || 0).toLocaleString()}</TableCell>
+                    <TableCell>{row?.nama_karyawan || "-"}</TableCell>
+                    <TableCell>{row?.jml_gigi || "-"}</TableCell>
+                    <TableCell>{(row?.tarif || 0).toLocaleString()}</TableCell>
                     <TableCell>{(row?.biaya_perbaikan || 0).toLocaleString()}</TableCell>
-                    <TableCell>{formatCurrency(isDeposit ? row.detail_deposit.tarif_per_gigi * row.detail_deposit.jumlah_gigi : row.total_biaya + row.biaya_perbaikan)}</TableCell>
-                    <TableCell>{isDeposit ? formatCurrency(row.detail_deposit.jumlah) : "-"}</TableCell>
+                    <TableCell>{formatCurrency(row.total_biaya + row.biaya_perbaikan)}</TableCell>
                     <TableCell>{row?.nama_keterangan || "-"}</TableCell>
                   </TableRow>
                 )

@@ -22,8 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchPatients = async ({ queryKey }) => {
   const [, { page, search, address }] = queryKey;
   const response = await fetcher(
-    `${
-      import.meta.env.VITE_API_BASE_URL
+    `${import.meta.env.VITE_API_BASE_URL
     }/pasien?page=${page}&limit=20&search=${search}&address=${address}`
   );
   return response;
@@ -115,7 +114,7 @@ const ListPatient = () => {
           display: "flex",
           flexDirection: "column",
           gap: 2,
-          height: "100%",
+          height: "calc(85vh - 8px)"
         }}
       >
         <Stack gap={3} sx={{ height: "100%" }}>
@@ -183,7 +182,7 @@ const ListPatient = () => {
             />
           </Stack>
 
-          <Stack gap={3} sx={{ flexGrow: 1, overflow: "auto", height: "50vh" }}>
+          <Stack gap={2} sx={{ flexGrow: 1, overflow: "auto", height: "50vh" }}>
             {error ? (
               <Alert severity="error" sx={{ mb: 2 }}>
                 Terjadi kesalahan saat mengambil data: {error.message}

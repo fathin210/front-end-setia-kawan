@@ -136,7 +136,7 @@ const Earning = () => {
                       : ""}
                   </TableCell>
                   <TableCell>#SK{row.nopendaftaran}#</TableCell>
-                  <TableCell>{row.nmpasien}</TableCell>
+                  <TableCell>{row?.nama_pasien || row?.nmpasien }</TableCell>
                   <TableCell>{row.nama_tindakan}</TableCell>
                   <TableCell>{row.nama_karyawan}</TableCell>
                   <TableCell align="right">{row.jml_gigi}</TableCell>

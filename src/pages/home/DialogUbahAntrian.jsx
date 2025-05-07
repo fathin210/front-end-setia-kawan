@@ -7,11 +7,15 @@ import { useFetchMasterAction } from '../../hooks/useFetchMasterAction'
 import { useFetchKaryawan } from '../../hooks/useFetchKaryawan'
 import { useUpdateQueue } from '../../hooks/useMutateQueue'
 import useAlertStore from '../../store/alertStore'
+import PatientInfoSection from './QueueDetailDialog/PatientInfoSection'
+import TechnicianSection from './QueueDetailDialog/TechnicianSection'
+import { useFetchShift } from '../../hooks/useFetchShift'
 
 const DialogUbahAntrian = ({ isOpen, onClose, queue }) => {
 
   const { data: masterKaryawan } = useFetchKaryawan();
   const { data: masterTindakan } = useFetchMasterAction();
+  const { data: masterShift } = useFetchShift();
 
   const { showAlert } = useAlertStore.getState()
 
@@ -22,7 +26,7 @@ const DialogUbahAntrian = ({ isOpen, onClose, queue }) => {
     handleSubmit,
     formState: { errors },
     watch,
-    register
+    setValue
   } = useForm({
     defaultValues: { ...queue },
   });
@@ -61,62 +65,15 @@ const DialogUbahAntrian = ({ isOpen, onClose, queue }) => {
         <form onSubmit={handleSubmit(handleUpdateQueue)}>
           <Box>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography>ID Pasien</Typography>
-                <TextField slotProps={{
-                  input: {
-                    readOnly: true
-                  }
-                }}
-                  fullWidth
-                  {...register("nomorpasien")}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography>Nama Pasien</Typography>
-                <TextField slotProps={{
-                  input: {
-                    readOnly: true
-                  }
-                }}
-                  fullWidth
-                  {...register("nomorpasien")}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="h6" fontWeight="bold">
-                  Teknisi
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="idkaryawan"
-                  control={control}
-                  rules={{ required: "Teknisi wajib dipilih" }}
-                  render={({ field }) => (
-                    <Autocomplete
-                      options={safeArray(masterKaryawan)}
-                      getOptionLabel={(option) => option?.nmkaryawan || ""}
-                      value={
-                        safeArray(masterKaryawan).find(
-                          (emp) => emp.idkaryawan === field.value
-                        ) || null
-                      }
-                      onChange={(_, newValue) => {
-                        field.onChange(newValue?.idkaryawan || undefined);
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Nama Teknisi"
-                          error={Boolean(errors.idkaryawan)}
-                          helperText={errors.idkaryawan?.message}
-                        />
-                      )}
-                    />
-                  )}
-                />
-              </Grid>
+              <PatientInfoSection queue={queue} />
+              <TechnicianSection
+                control={control}
+                errors={errors}
+                masterKaryawan={masterKaryawan}
+                masterShift={masterShift}
+                watch={watch}
+                setValue={setValue}
+              />
 
               {/* Pilih Tindakan */}
               <Grid item xs={12}>
@@ -149,7 +106,7 @@ const DialogUbahAntrian = ({ isOpen, onClose, queue }) => {
               </Grid>
               <Grid item xs={12}>
                 <Box display="flex" justifyContent="end">
-                  <Button variant='contained' type="submit">Ubah Antrian</Button>
+                  <Button variant='contained' type="submit">Simpan</Button>
                 </Box>
               </Grid>
             </Grid>

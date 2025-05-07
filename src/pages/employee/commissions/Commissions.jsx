@@ -311,14 +311,14 @@ const Commissions = () => {
                       {rows.map((row, idx) => (
                         <TableRow hover key={row.id}>
                           <TableCell align="right">
-                            {++idx}
+                            {idx + 1}
                           </TableCell>
                           <TableCell>
                             {row?.tanggal
                               ? moment(row.tanggal).format("DD/MM/YYYY")
                               : ""}
                           </TableCell>
-                          <TableCell>{row.nmpasien}</TableCell>
+                          <TableCell>{row?.nama_pasien || row?.nmpasien}</TableCell>
                           <TableCell>{row.nama_tindakan}</TableCell>
                           <TableCell>{row?.nama_keterangan}</TableCell>
                           <TableCell align="right">
@@ -387,7 +387,7 @@ const Commissions = () => {
             </Table>
           </TableContainer>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <Stack gap={2} alignItems="center" sx={{ mt: 2 }}>
                 <Typography variant="h6">REKAP TRANSAKSI</Typography>
                 <TableContainer component={Paper}>
@@ -441,6 +441,52 @@ const Commissions = () => {
                           {formatCurrency(totalPendapatan - totalKomisi)}
                         </TableCell>
                       </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Stack gap={2} alignItems="center" sx={{ mt: 2 }}>
+                <Typography variant="h6">REKAP PER TARIF GIGI</Typography>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Uraian</TableCell>
+                        <TableCell>Jumlah</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Rp. 40.000</TableCell>
+                        <TableCell>{totalGigi40}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Rp. 60.000</TableCell>
+                        <TableCell>{totalGigi60}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Rp. 160.000</TableCell>
+                        <TableCell>{totalGigi160}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Stack gap={2} alignItems="center" sx={{ mt: 2 }}>
+                <Typography variant="h6">REKAP PER STATUS</Typography>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Uraian</TableCell>
+                        <TableCell>Jumlah</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
                       <TableRow>
                         <TableCell>Lunas</TableCell>
                         <TableCell>
@@ -476,35 +522,6 @@ const Commissions = () => {
                         <TableCell>
                           {groupByStatus["B"] || 0}
                         </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Stack>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Stack gap={2} alignItems="center" sx={{ mt: 2 }}>
-                <Typography variant="h6">REKAP PER TARIF GIGI</Typography>
-                <TableContainer component={Paper}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Uraian</TableCell>
-                        <TableCell>Jumlah</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Rp. 40.000</TableCell>
-                        <TableCell>{totalGigi40}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Rp. 60.000</TableCell>
-                        <TableCell>{totalGigi60}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Rp. 160.000</TableCell>
-                        <TableCell>{totalGigi160}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>

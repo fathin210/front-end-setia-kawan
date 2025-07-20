@@ -17,9 +17,9 @@ export const FORM_DEFAULTS = {
 };
 
 export const TARIFF_OPTIONS = [
-  { value: 40000, label: "40.000" },
-  { value: 60000, label: "60.000" },
-  { value: 160000, label: "160.000" }
+  { value: 40000, label: "40.000", code: "40" },
+  { value: 60000, label: "60.000", code: "60" },
+  { value: 160000, label: "160.000", code: "00" }
 ];
 
 export const REPAIR_COST_OPTIONS = [30000, 50000, 80000, 100000];

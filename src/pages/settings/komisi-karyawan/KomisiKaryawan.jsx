@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -23,35 +23,31 @@ import {
   Autocomplete,
 } from "@mui/material";
 import { Edit } from "@mui/icons-material";
-import { useUpdateTarifTindakan } from "../../../hooks/useMutateTarifTindakan";
-import { useFetchTarifTindakan } from "../../../hooks/useFetchTarifTindakan";
 import { formatCurrency, safeArray } from "../../../utils/common";
 import { useFetchMasterPelayanan } from "../../../hooks/useFetchMasterPelayanan";
 import { useFetchShift } from "../../../hooks/useFetchShift";
+import { TARIFF_OPTIONS } from "../../home/QueueDetailDialog/constants";
+import { useUpdatePelayanan } from "../../../hooks/useMutatePelayanan";
 
 const defaultForm = {
-  idkaryawan: "",
-  tarif: "",
-  komisi: "",
+  id: "",
   kdtindakan: "",
+  komisi_pribadi: "",
+  komisi_kolektif: "",
 };
 
 const KomisiKaryawan = () => {
-  const {
-    data: tarifTindakan,
-    isLoading,
-    error: errorFetching,
-  } = useFetchTarifTindakan();
 
-  const updateMutation = useUpdateTarifTindakan();
+  const updateMutation = useUpdatePelayanan ();
 
-  const { data: masterPelayanan } = useFetchMasterPelayanan();
+  const { data: masterPelayanan, isLoading, error: errorFetching, } = useFetchMasterPelayanan();
   const { data: masterShift } = useFetchShift();
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
+  const [tarif, setTarif] = useState();
   const [shift, setShift] = useState(1);
 
   const handleOpen = (row) => {
@@ -68,13 +64,20 @@ const KomisiKaryawan = () => {
   };
 
   const handleSubmit = async () => {
-    if (form.kdtindakan === "03" && !form.komisi) {
-      setError("Komisi wajib diisi.");
-      return;
-    } else if (form.kdtindakan !== "03" && (!form.tarif || !form.komisi)) {
-      setError("Tarif dan Komisi wajib diisi.");
+    const {
+      komisi_pribadi,
+      komisi_kolektif,
+    } = form;
+
+    if (komisi_pribadi < 0 || komisi_kolektif < 0) {
+      setError("Komisi pribadi dan komisi kolektif wajib diisi.");
       return;
     }
+
+    // if (!komisi_kolektif || !nkomisi_kolektif) {
+    //   setError("Komisi kolektif dan jumlahnya wajib diisi.");
+    //   return;
+    // }
 
     try {
       await updateMutation.mutateAsync(form);
@@ -84,6 +87,7 @@ const KomisiKaryawan = () => {
     }
   };
 
+
   return (
     <Box p={2}>
       <Stack
@@ -92,26 +96,47 @@ const KomisiKaryawan = () => {
         justifyContent="space-between"
         sx={{ mb: 2 }}
       >
-        <Typography variant="h6">Komisi Karyawan</Typography>
+        <Typography variant="h6">Komisi / Shift</Typography>
 
-        <Box sx={{ width: 200 }}>
-          <Autocomplete
-            options={safeArray(masterShift)}
-            getOptionLabel={(option) => option?.nmshift || ""}
-            value={
-              safeArray(masterShift).find((item) => item.kdshift === shift) ||
-              null
-            }
-            onChange={(_, newValue) => setShift(newValue?.kdshift)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Shift"
-                placeholder="Pilih Shift"
-                fullWidth
-              />
-            )}
-          />
+        <Box display="flex" gap={2}>
+          <Box sx={{ width: 200 }}>
+            <Autocomplete
+              options={safeArray(TARIFF_OPTIONS)}
+              getOptionLabel={(option) => `${option?.value ? formatCurrency(option.value) : ""}`}
+              value={
+                safeArray(TARIFF_OPTIONS).find((item) => item.value === tarif?.value) ||
+                null
+              }
+              onChange={(_, newValue) => setTarif(newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Tarif Gigi"
+                  placeholder="Pilih Tarif Gigi"
+                  fullWidth
+                />
+              )}
+            />
+          </Box>
+          <Box sx={{ width: 200 }}>
+            <Autocomplete
+              options={safeArray(masterShift)}
+              getOptionLabel={(option) => option?.nmshift || ""}
+              value={
+                safeArray(masterShift).find((item) => item.kdshift === shift) ||
+                null
+              }
+              onChange={(_, newValue) => setShift(newValue?.kdshift)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Shift"
+                  placeholder="Pilih Shift"
+                  fullWidth
+                />
+              )}
+            />
+          </Box>
         </Box>
       </Stack>
 
@@ -146,7 +171,11 @@ const KomisiKaryawan = () => {
             </TableHead>
             <TableBody>
               {safeArray(masterPelayanan)
-                ?.filter((item) => item.kdshift == shift)
+                ?.filter((item) => {
+                  if (item.kdshift != shift) return false;
+                  if (tarif?.code) return item.kode?.startsWith(tarif.code);
+                  return true;
+                })
                 ?.map((row, index) => (
                   <TableRow key={row.kdtindakan}>
                     <TableCell>{++index}</TableCell>
@@ -186,11 +215,24 @@ const KomisiKaryawan = () => {
             label="Komisi Pribadi"
             placeholder="Masukkan besar komisi pribadi"
             type="number"
-            value={form?.komisi_kolektif || "0"}
+            value={form?.komisi_pribadi}
             onChange={(e) =>
               setForm({ ...form, komisi_pribadi: e.target.value })
             }
           />
+          {/* <TextField
+            autoComplete="off"
+            margin="normal"
+            fullWidth
+            name="nkomisi_pribadi"
+            label="Jumlah Komisi Pribadi (nkomisi)"
+            placeholder="Masukkan jumlah komisi pribadi"
+            type="number"
+            value={form?.nkomisi_pribadi || "0"}
+            onChange={(e) =>
+              setForm({ ...form, nkomisi_pribadi: e.target.value })
+            }
+          /> */}
           <TextField
             autoComplete="off"
             margin="normal"
@@ -199,11 +241,24 @@ const KomisiKaryawan = () => {
             label="Komisi Kolektif"
             placeholder="Masukkan besar komisi kolektif"
             type="number"
-            value={form?.komisi_kolektif || "0"}
+            value={form?.komisi_kolektif}
             onChange={(e) =>
               setForm({ ...form, komisi_kolektif: e.target.value })
             }
           />
+          {/* <TextField
+            autoComplete="off"
+            margin="normal"
+            fullWidth
+            name="nkomisi_kolektif"
+            label="Jumlah Komisi Kolektif (nkomisi)"
+            placeholder="Masukkan jumlah komisi kolektif"
+            type="number"
+            value={form?.nkomisi_kolektif || "0"}
+            onChange={(e) =>
+              setForm({ ...form, nkomisi_kolektif: e.target.value })
+            }
+          /> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Tutup</Button>

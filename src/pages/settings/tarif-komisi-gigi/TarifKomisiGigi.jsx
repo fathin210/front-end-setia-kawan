@@ -115,7 +115,9 @@ const TarifKomisiGigi = () => {
                   <TableCell>No</TableCell>
                   <TableCell>Kode</TableCell>
                   <TableCell>Besar Tarif</TableCell>
-                  <TableCell>Besar Komisi</TableCell>
+                  <TableCell>Komisi Total</TableCell>
+                  <TableCell>Komisi Pribadi</TableCell>
+                  <TableCell>Komisi Kolektif</TableCell>
                   <TableCell>Aksi</TableCell>
                 </TableRow>
               </TableHead>
@@ -128,6 +130,8 @@ const TarifKomisiGigi = () => {
                       <TableCell>{row.kdtindakan}</TableCell>
                       <TableCell>{formatCurrency(row.tarif)}</TableCell>
                       <TableCell>{formatCurrency(row.komisi)}</TableCell>
+                      <TableCell>{formatCurrency(row.komisi_pribadi)}</TableCell>
+                      <TableCell>{formatCurrency(row.komisi_kolektif)}</TableCell>
                       <TableCell>
                         <IconButton onClick={() => handleOpen(row)}>
                           <Edit />
@@ -227,16 +231,38 @@ const TarifKomisiGigi = () => {
               onChange={(e) => setForm({ ...form, komisi: e.target.value })}
             />
           ) : (
-            <TextField
-              autoComplete="off"
-              margin="normal"
-              fullWidth
-              name="komisi"
-              label="Komisi"
-              placeholder="Masukkan besar komisi"
-              value={form?.komisi ? formatCurrency(form.komisi) : ""}
-              onChange={handleChange}
-            />
+            <>
+              <TextField
+                autoComplete="off"
+                margin="normal"
+                fullWidth
+                name="komisi"
+                label="Komisi Total"
+                placeholder="Masukkan komisi"
+                value={form?.komisi ? formatCurrency(form.komisi) : ""}
+                onChange={handleChange}
+              />
+              <TextField
+                autoComplete="off"
+                margin="normal"
+                fullWidth
+                name="komisi_pribadi"
+                label="Komisi Pribadi"
+                placeholder="Masukkan komisi"
+                value={form?.komisi_pribadi ? formatCurrency(form.komisi_pribadi) : ""}
+                onChange={handleChange}
+              />
+              <TextField
+                autoComplete="off"
+                margin="normal"
+                fullWidth
+                name="komisi_kolektif"
+                label="Komisi Kolektif"
+                placeholder="Masukkan komisi"
+                value={form?.komisi_kolektif ? formatCurrency(form.komisi_kolektif) : ""}
+                onChange={handleChange}
+              />
+            </>
           )}
         </DialogContent>
         <DialogActions>

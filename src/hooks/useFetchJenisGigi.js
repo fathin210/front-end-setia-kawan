@@ -5,6 +5,6 @@ export const useFetchJenisGigi = () => {
   return useQuery({
     queryKey: ["jenis_gigi"],
     queryFn: () => fetcher(`${import.meta.env.VITE_API_BASE_URL}/jenis-gigi`),
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 15,
   });
 };

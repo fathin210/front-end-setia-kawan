@@ -7,7 +7,7 @@ const useFetchQueue = (id) => {
         queryFn: () => {
             return fetcher(`${import.meta.env.VITE_API_BASE_URL}/daftar/${id}`);
         },
-        staleTime: 1000 * 60 * 10, // Cache selama 20 detik
+        staleTime: 1000 * 15,
     });
 };
 

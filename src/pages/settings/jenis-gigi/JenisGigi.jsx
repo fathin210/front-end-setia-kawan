@@ -32,7 +32,8 @@ import { formatCurrency, safeArray } from "../../../utils/common";
 
 const defaultForm = {
   tarif: "",
-  komisi: "",
+  komisi_pribadi: "",
+  komisi_kolektif: "",
 };
 
 const JenisGigi = () => {
@@ -67,9 +68,9 @@ const JenisGigi = () => {
     setForm((prev) => ({ ...prev, tarif: rawValue ? Number(rawValue) : "" }));
   };
 
-  const handleKomisiChange = (e) => {
+  const handleNumberChange = (name) => (e) => {
     const rawValue = e.target.value.replace(/\D/g, "");
-    setForm((prev) => ({ ...prev, komisi: rawValue ? Number(rawValue) : "" }));
+    setForm((prev) => ({ ...prev, [name]: rawValue ? Number(rawValue) : "" }));
   };
 
   const handleSubmit = async () => {
@@ -139,7 +140,8 @@ const JenisGigi = () => {
               >
                 <TableCell sx={{ fontWeight: 600 }}>No</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="right">Tarif</TableCell>
-                <TableCell sx={{ fontWeight: 600 }} align="right">Komisi</TableCell>
+                <TableCell sx={{ fontWeight: 600 }} align="right">Komisi Pribadi</TableCell>
+                <TableCell sx={{ fontWeight: 600 }} align="right">Komisi Kolektif</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="center">Aksi</TableCell>
               </TableRow>
             </TableHead>
@@ -148,7 +150,8 @@ const JenisGigi = () => {
                 <TableRow key={row.id} hover>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell align="right">{formatCurrency(row.tarif)}</TableCell>
-                  <TableCell align="right">{formatCurrency(row.komisi)}</TableCell>
+                  <TableCell align="right">{formatCurrency(row.komisi_pribadi)}</TableCell>
+                  <TableCell align="right">{formatCurrency(row.komisi_kolektif)}</TableCell>
                   <TableCell align="center">
                     <IconButton onClick={() => handleOpen(row)} color="primary">
                       <Edit fontSize="small" />
@@ -182,10 +185,17 @@ const JenisGigi = () => {
           />
           <TextField
             fullWidth
-            label="Komisi"
-            placeholder="Masukkan besar komisi"
-            value={form?.komisi ? formatCurrency(form.komisi) : ""}
-            onChange={handleKomisiChange}
+            label="Komisi Pribadi"
+            placeholder="Masukkan besar komisi pribadi"
+            value={form?.komisi_pribadi ? formatCurrency(form.komisi_pribadi) : ""}
+            onChange={handleNumberChange("komisi_pribadi")}
+          />
+          <TextField
+            fullWidth
+            label="Komisi Kolektif"
+            placeholder="Masukkan besar komisi kolektif"
+            value={form?.komisi_kolektif ? formatCurrency(form.komisi_kolektif) : ""}
+            onChange={handleNumberChange("komisi_kolektif")}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>

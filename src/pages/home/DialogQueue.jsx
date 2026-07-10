@@ -7,9 +7,9 @@ import {
   Button,
   Typography,
   Stack,
+  Box,
   Autocomplete,
   TextField,
-  Alert,
   alpha,
 } from "@mui/material";
 import { EventNote } from "@mui/icons-material";
@@ -19,7 +19,6 @@ import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
 import useListQueue from "../../hooks/useListQueue";
 import { safeArray } from "../../utils/common";
 import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
-import { Close } from "@mui/icons-material";
 import HistoryPatient from "../patient/detail-patient/HistoryPatient";
 
 const DialogQueue = ({ isOpen, onClose, patient }) => {
@@ -126,81 +125,6 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
             </Typography>
             <HistoryPatient listQueue={listQueue} />
           </Box>
-
-          {/* STATE LOADING */}
-          {isLoading && (
-            <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
-              <CircularProgress />
-            </Box>
-          )}
-
-          {/* STATE ERROR */}
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              Terjadi kesalahan saat mengambil data: {error.message}
-            </Alert>
-          )}
-
-          {/* TABLE RINCIAN */}
-          {!isLoading && !error && rincianData?.length > 0 ? (
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{ borderRadius: 2 }}
-            >
-              <Table>
-                <TableHead sx={{ bgcolor: "primary.main" }}>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
-                      Tanggal Transaksi
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
-                      Invoice
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
-                      Nama Pasien
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
-                      Tindakan
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
-                      Teknisi
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
-                      Total Biaya
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
-                      Keterangan
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rincianData.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell>
-                        {row?.tanggal_pelaks
-                          ? moment(row?.tanggal_pelaks).format("DD-MM-YYYY")
-                          : ""}
-                      </TableCell>
-                      <TableCell>#SK{row.nopendaftaran}#</TableCell>
-                      <TableCell>{row.nmpasien}</TableCell>
-                      <TableCell>{row?.nama_tindakan || "-"}</TableCell>
-                      <TableCell>{row?.nama_karyawan || "-"}</TableCell>
-                      <TableCell>{formatCurrency(row.total_biaya)}</TableCell>
-                      <TableCell>{row?.ket || "-"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            !isLoading &&
-            !error && (
-              <Typography sx={{ textAlign: "center", color: "text.secondary", mt: 3 }}>
-                Tidak ada data rincian pelayanan.
-              </Typography>
-            )
-          )}
         </Stack>
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>

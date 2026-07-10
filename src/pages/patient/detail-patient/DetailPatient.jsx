@@ -2,9 +2,20 @@ import React, { useState } from "react";
 import {
   Container,
   Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Card,
   CardContent,
   Grid,
+  Divider,
+  Box,
+  CircularProgress,
+  Alert,
   Stack,
   Avatar,
   Button,
@@ -29,9 +40,6 @@ import DialogQueue from "../../home/DialogQueue";
 import DialogMoveTransaction from "./DialogMoveTransaction";
 import MaleImage from "../../../assets/male.png";
 import FemaleImage from "../../../assets/female.png";
-import HistoryPatient from "./HistoryPatient";
-import { useDeletePatient } from "../../../hooks/useMutatePatient";
-import { useNavigate } from "react-router-dom";
 
 const DetailPatient = () => {
   const { activePatient } = usePatientStore();
@@ -290,7 +298,7 @@ const DetailPatient = () => {
           isOpen={true}
           editData={activePatient}
           handleDialog={handleDialog}
-          refetch={listQueue.refetch}
+          refetch={refetch}
         />
       )}
       {dialog === ADD_QUEUE && (

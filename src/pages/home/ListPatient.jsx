@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Add, Close, LocationOn, People, Search } from "@mui/icons-material";
 import PatientCard from "./PatientCard";
 import { fetcher } from "../../utils/fetcher";

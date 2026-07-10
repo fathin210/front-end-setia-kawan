@@ -33,6 +33,7 @@ import { useDebouncedCallback } from "use-debounce";
 import {
   MoreVert,
   Search,
+  Close,
   ReceiptLong,
   DeleteOutline,
   RestartAlt,
@@ -62,13 +63,8 @@ import {
   useUpdateQueueStatus,
 } from "../../hooks/useMutateQueue";
 import DialogDeposit from "./DialogDeposit";
-import DialogStatus from "./DialogStatus";
-import usePdfStore from "../../store/pdfStore";
-import { useFetchPDFCard } from "../../hooks/useFetchPDFCard";
-import DialogUbahAntrian from "./DialogUbahAntrian";
 
 const ListQueue = () => {
-  const { openDialog, setLoading, setPdfURL, setError } = usePdfStore()
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -76,25 +72,6 @@ const ListQueue = () => {
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [status, setStatus] = useState("process");
-
-  const { refetch } = useFetchPDFCard(null, selectedQueue?.nomorpasien, {
-    enabled: false,
-  });
-
-  const handlePrintCard = async () => {
-    try {
-      openDialog("Kartu Pasien");
-      setLoading(true);
-      const { data } = await refetch();
-      if (data) {
-        const url = URL.createObjectURL(data);
-        setPdfURL(url);
-        setLoading(false);
-      }
-    } catch (error) {
-      setError(error?.message);
-    }
-  };
 
   const debouncedUpdateSearch = useDebouncedCallback((value) => {
     setSearch(value);
@@ -337,7 +314,7 @@ const ListQueue = () => {
         </MenuItem>
         <MenuItem
           onClick={() => {
-            handlePrintCard()
+            handleDialogOpen(CLEAR_QUEUE);
             handleMenuClose();
           }}
         >

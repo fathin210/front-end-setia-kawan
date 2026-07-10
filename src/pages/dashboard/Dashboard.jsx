@@ -139,13 +139,16 @@ const Dashboard = () => {
     );
   }
 
-  const totalPendapatanHariIni = data?.pendapatan_hari_ini?.jumlah || 0;
+  // Cuma tampilin 20% dari pendapatan asli (hari ini & grafik bulanan)
+  const PERSENTASE_TAMPIL = 0.2;
+  const totalPendapatanHariIni =
+    (data?.pendapatan_hari_ini?.jumlah || 0) * PERSENTASE_TAMPIL;
 
   const dataPendapatanBulanan =
     data?.grafik_pendapatan?.map((item) => ({
       bulan: item.bulan.split(" ")[0].slice(0, 3),
       fullBulan: item.bulan,
-      pendapatan: item.jumlah_pendapatan,
+      pendapatan: item.jumlah_pendapatan * PERSENTASE_TAMPIL,
     })) || [];
 
   const dataPasienBulanan =

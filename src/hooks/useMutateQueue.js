@@ -29,7 +29,7 @@ export const useAddToQueueMutation = (onComplete) => {
         nkomisi_pribadi2: 0,
         biaya_perbaikan: 0,
         komisi_perbaikan: 0,
-        ket: data?.ket ? data.ket : "",
+        ket: data?.ket ? data.ket : null,
         dp: 0,
       });
     },
@@ -54,35 +54,9 @@ export const useClearQueueMutation = ({ onComplete }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data) => {
-      return await putFetcher(`${baseURL}/${data?.id}`, {
-        ...data,
-        nomorpasien: data.nomorpasien,
-        nmpasien: data.nmpasien,
-        tanggal: data?.tanggal ? data.tanggal : moment().format("YYYY-MM-DD"),
-        tanggal_pelaks: moment(data?.tanggal_pelaks).format("YYYY-MM-DD"),
-        tgl_lahir: data.tgl_lahir,
-        jml_gigi: 0,
-        tarif: 0,
-        total_biaya: 0,
-        komisi_kolektif: 0,
-        komisi_pribadi: 0,
-        komisi_pribadi2: 0,
-        nkomisi_kolektif: 0,
-        nkomisi_pribadi: 0,
-        nkomisi_pribadi2: 0,
-        biaya_perbaikan: 0,
-        komisi_perbaikan: 0,
-        ket: null,
-        dp: 0,
-        kdtindakan: null,
-        idkaryawan: null,
-        jam: null,
-        kdshift: null,
-        batal_dp: true,
-        status: null
-      });
-    },
+    // Pakai endpoint /reset khusus — route PUT /:id generik butuh tarif yang
+    // valid buat lookup jenis gigi, jadi gagal kalau dikirim tarif: 0.
+    mutationFn: (data) => putFetcher(`${baseURL}/${data?.id}/reset`),
     onMutate: () => {
       showAlert("Memproses permintaan...", "waiting");
     },
@@ -199,27 +173,3 @@ export const useDeleteQueue = () => {
   });
 
 };
-export const useUpdateStatus = (onComplete) => {
-  const { showAlert } = useAlertStore.getState();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (data) => {
-      return await putFetcher(`${baseURL}/${data.id}`, {
-        ...data,
-        status: "x"
-      });
-    },
-    onMutate: () => {
-      showAlert("Memproses permintaan...", "waiting");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["listQueue"]);
-      showAlert("Status berhasil diupdate!", "success");
-      onComplete && onComplete()
-    },
-    onError: (error) => {
-      console.error("Error:", error);
-      showAlert("Gagal mengupdate status!", "error");
-    },
-  });
-}

@@ -78,7 +78,9 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
     formState: { errors },
     watch,
   } = useForm({
-    defaultValues: { ...queue, kdtindakan: "01" },
+    // "01" cuma default buat antrian baru yang belum punya tindakan sama
+    // sekali — kalau queue udah punya kdtindakan (lagi diedit), pakai itu.
+    defaultValues: { ...queue, kdtindakan: queue?.kdtindakan || "01" },
   });
 
   const deposit = useFetchDeposit(watch("nomorpasien"), watch("iddp"));

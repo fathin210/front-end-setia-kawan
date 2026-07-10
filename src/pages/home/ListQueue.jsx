@@ -42,11 +42,13 @@ import {
   EventBusy,
   Flag,
   Edit,
+  Print,
 } from "@mui/icons-material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import useListQueue from "../../hooks/useListQueue";
 import { useFetchStatus } from "../../hooks/useFetchStatus";
+import { useFetchPDFCard } from "../../hooks/useFetchPDFCard";
 import DialogQueueDetail from "./DialogQueueDetail";
 import DialogEditQueue from "./DialogEditQueue";
 import {
@@ -63,6 +65,7 @@ import {
   useUpdateQueueStatus,
 } from "../../hooks/useMutateQueue";
 import DialogDeposit from "./DialogDeposit";
+import usePdfStore from "../../store/pdfStore";
 
 const ListQueue = () => {
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
@@ -72,6 +75,7 @@ const ListQueue = () => {
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [status, setStatus] = useState("process");
+  const { openDialog, setLoading, setPdfURL, setError } = usePdfStore();
 
   const debouncedUpdateSearch = useDebouncedCallback((value) => {
     setSearch(value);
@@ -106,6 +110,27 @@ const ListQueue = () => {
   const { data: masterStatus } = useFetchStatus();
   const updateStatusMutation = useUpdateQueueStatus();
   const [selectedStatus, setSelectedStatus] = useState(null);
+
+  const { isFetching: isFetchingCard, refetch: refetchCard } = useFetchPDFCard(
+    null,
+    selectedQueue?.nomorpasien,
+    { enabled: false }
+  );
+
+  const handlePrintCard = async () => {
+    try {
+      openDialog("Kartu Pasien");
+      setLoading(true);
+      const { data } = await refetchCard();
+      if (data) {
+        const url = URL.createObjectURL(data);
+        setPdfURL(url);
+        setLoading(false);
+      }
+    } catch (err) {
+      setError(err?.message);
+    }
+  };
 
   const handleDialogOpen = (dialog) => {
     setDialog(dialog);
@@ -213,6 +238,7 @@ const ListQueue = () => {
                   }}
                 >
                   <TableCell sx={{ fontWeight: 600 }}>No.</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Nomor Pasien</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Nama</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Tindakan</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Teknisi</TableCell>
@@ -228,6 +254,7 @@ const ListQueue = () => {
                 {safeArray(data).map((row, index) => (
                   <TableRow key={row?.id} hover>
                     <TableCell>{index + 1}</TableCell>
+                    <TableCell>{row?.nomorpasien || "-"}</TableCell>
                     <TableCell>{row?.nama_pasien || "-"}</TableCell>
                     <TableCell>{row?.nama_tindakan || "-"}</TableCell>
                     <TableCell>{row?.nama_karyawan || "-"}</TableCell>
@@ -311,6 +338,22 @@ const ListQueue = () => {
             <RequestQuote fontSize="small" />
           </ListItemIcon>
           Deposit
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handlePrintCard();
+            handleMenuClose();
+          }}
+          disabled={isFetchingCard}
+        >
+          <ListItemIcon>
+            {isFetchingCard ? (
+              <CircularProgress size={18} />
+            ) : (
+              <Print fontSize="small" />
+            )}
+          </ListItemIcon>
+          Cetak Kartu Pasien
         </MenuItem>
         <MenuItem
           onClick={() => {

@@ -110,7 +110,7 @@ const KomisiKaryawan = () => {
       setError("Jenis gigi wajib dipilih.");
       return;
     }
-    if (!form.komisi_pribadi || !form.komisi_kolektif) {
+    if (form.komisi_pribadi === "" || form.komisi_kolektif === "") {
       setError("Komisi pribadi dan komisi kolektif wajib diisi.");
       return;
     }
@@ -263,8 +263,9 @@ const KomisiKaryawan = () => {
                 options={safeArray(masterShift)}
                 getOptionLabel={(option) => option?.nmshift || ""}
                 value={
+                  // kdshift dari master (angka) vs data tersimpan (string) -> loose equality
                   safeArray(masterShift).find(
-                    (item) => item.kdshift === form?.kdshift
+                    (item) => item.kdshift == form?.kdshift
                   ) || null
                 }
                 onChange={(_, newValue) =>
@@ -326,7 +327,7 @@ const KomisiKaryawan = () => {
                 required
                 label="Komisi Pribadi"
                 placeholder="Masukkan komisi pribadi"
-                value={form?.komisi_pribadi || ""}
+                value={form?.komisi_pribadi ?? ""}
                 onChange={handleNumberChange("komisi_pribadi")}
               />
             </Grid>
@@ -336,7 +337,7 @@ const KomisiKaryawan = () => {
                 required
                 label="Komisi Kolektif"
                 placeholder="Masukkan komisi kolektif"
-                value={form?.komisi_kolektif || ""}
+                value={form?.komisi_kolektif ?? ""}
                 onChange={handleNumberChange("komisi_kolektif")}
               />
             </Grid>

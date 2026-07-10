@@ -51,15 +51,20 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
   const { openDialog, setPdfURL, setLoading, setError } = usePdfStore();
   const [dialog, setDialog] = useState(false);
 
+  // Kalau `data` datang dari row antrian (daftar) yang udah punya deposit,
+  // field deposit-nya (jumlah, tarif_per_gigi, dst) nyempil di
+  // `data.detail_deposit` (hasil include Dp di backend), bukan flat di `data`.
+  const deposit = data?.detail_deposit || data || {};
+
   const defaultValues = {
     ...data,
-    tanggal: data?.tanggal || moment().format("YYYY-MM-DD"),
-    tanggal_diambil: data?.tanggal_diambil || null,
-    telp: data?.telp || "",
-    jumlah: data?.jumlah || "",
-    idkaryawan: data?.idkaryawan || null,
-    jumlah_gigi: data?.jumlah_gigi || null,
-    tarif_per_gigi: data?.tarif_per_gigi || "",
+    tanggal: deposit?.tanggal || data?.tanggal || moment().format("YYYY-MM-DD"),
+    tanggal_diambil: deposit?.tanggal_diambil || null,
+    telp: deposit?.telp || data?.telp || "",
+    jumlah: deposit?.jumlah || "",
+    idkaryawan: deposit?.idkaryawan || null,
+    jumlah_gigi: deposit?.jumlah_gigi || null,
+    tarif_per_gigi: deposit?.tarif_per_gigi || "",
   };
 
   const {

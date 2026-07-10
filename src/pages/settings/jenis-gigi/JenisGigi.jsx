@@ -34,6 +34,7 @@ const defaultForm = {
   tarif: "",
   komisi_pribadi: "",
   komisi_kolektif: "",
+  komisi_shift_3: "",
 };
 
 const JenisGigi = () => {
@@ -142,6 +143,7 @@ const JenisGigi = () => {
                 <TableCell sx={{ fontWeight: 600 }} align="right">Tarif</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="right">Komisi Pribadi</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="right">Komisi Kolektif</TableCell>
+                <TableCell sx={{ fontWeight: 600 }} align="right">Komisi Shift 3</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="center">Aksi</TableCell>
               </TableRow>
             </TableHead>
@@ -152,6 +154,7 @@ const JenisGigi = () => {
                   <TableCell align="right">{formatCurrency(row.tarif)}</TableCell>
                   <TableCell align="right">{formatCurrency(row.komisi_pribadi)}</TableCell>
                   <TableCell align="right">{formatCurrency(row.komisi_kolektif)}</TableCell>
+                  <TableCell align="right">{formatCurrency(row.komisi_shift_3)}</TableCell>
                   <TableCell align="center">
                     <IconButton onClick={() => handleOpen(row)} color="primary">
                       <Edit fontSize="small" />
@@ -196,6 +199,13 @@ const JenisGigi = () => {
             placeholder="Masukkan besar komisi kolektif"
             value={form?.komisi_kolektif ? formatCurrency(form.komisi_kolektif) : ""}
             onChange={handleNumberChange("komisi_kolektif")}
+          />
+          <TextField
+            fullWidth
+            label="Komisi Shift 3"
+            placeholder="Masukkan nominal komisi flat untuk shift 3"
+            value={form?.komisi_shift_3 ? formatCurrency(form.komisi_shift_3) : ""}
+            onChange={handleNumberChange("komisi_shift_3")}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>

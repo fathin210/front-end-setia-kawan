@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -8,10 +9,12 @@ import {
   FormControlLabel,
   FormHelperText,
   FormLabel,
+  IconButton,
   Radio,
   RadioGroup,
   Stack,
   TextField,
+  Typography,
   Typography,
 } from "@mui/material";
 import React, { useEffect } from "react";
@@ -21,6 +24,7 @@ import moment from "moment";
 import { useForm, Controller } from "react-hook-form";
 import { useSubmitPatient } from "../../hooks/useMutatePatient";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
+import { Close } from "@mui/icons-material";
 
 const initialState = {
   nomorpasien: null,
@@ -59,7 +63,7 @@ const DialogPatientForm = ({ isOpen, handleDialog, editData }) => {
         }
         reset(initialState);
         handleDialog(false);
-      } catch (error) {}
+      } catch (error) { }
     },
   });
 

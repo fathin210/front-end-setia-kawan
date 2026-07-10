@@ -20,13 +20,14 @@ import {
   InputAdornment,
   IconButton,
   Button,
+  Tooltip,
 } from "@mui/material";
 import React, { useState } from "react";
 import useListQueue from "../../../hooks/useListQueue";
 import moment from "moment";
 import { DatePicker, DesktopDatePicker } from "@mui/x-date-pickers";
 import { formatCurrency, safeArray } from "../../../utils/common";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { InfoOutlined, Visibility, VisibilityOff } from "@mui/icons-material";
 
 // Helper untuk group by karyawan
 const groupBy = (arr, key) => {
@@ -50,6 +51,25 @@ const groupBy = (arr, key) => {
   return ordered;
 };
 
+const calculateTotal = (data, key, condition = () => true) => {
+  return safeArray(data).reduce((sum, item) => {
+    if (condition(item)) {
+      return sum + item[key];
+    }
+    return sum;
+  }, 0);
+};
+
+// Utility untuk menghitung jumlah berdasarkan kondisi tertentu
+const calculateCount = (data, key, value) => {
+  return safeArray(data).reduce((count, item) => {
+    if (item?.[key] === value) {
+      return count + (item?.jml_gigi || 0);
+    }
+    return count;
+  }, 0);
+};
+
 const Commissions = () => {
   const theme = useTheme();
   const [mode, setMode] = useState("harian");
@@ -64,55 +84,34 @@ const Commissions = () => {
 
   const groupedData = groupBy(data, "nama_karyawan");
 
-  const totalJumlahGigi = safeArray(data).reduce(
-    (sum, item) => sum + item.jml_gigi,
-    0
-  );
-  const totalBiayaPasang = safeArray(data).reduce(
-    (sum, item) => sum + item.total_biaya,
-    0
-  );
-  const totalKomisiKolektif = safeArray(data).reduce(
-    (sum, item) => sum + item.nkomisi_kolektif,
-    0
-  );
-  const totalKomisiPribadi = safeArray(data).reduce(
-    (sum, item) => sum + item.nkomisi_pribadi,
-    0
-  );
-  const totalBiayaPerbaikan = safeArray(data).reduce(
-    (sum, item) => sum + item.biaya_perbaikan,
-    0
-  );
-  const totalKomisiPerbaikan = safeArray(data).reduce(
-    (sum, item) => sum + item.komisi_perbaikan,
-    0
-  );
-  const totalJumlahKomisiPribadi = safeArray(data).reduce((sum, item) => {
-    return sum + item.nkomisi_pribadi + item.komisi_perbaikan;
-  }, 0);
-  const totalPendapatan = totalBiayaPasang + totalBiayaPerbaikan;
-  const totalKomisi =
-    totalKomisiKolektif + totalKomisiPribadi + totalKomisiPerbaikan;
+  // Menghitung total berdasarkan kolom yang berbeda
+  const totalJumlahGigi = calculateTotal(data, 'jml_gigi');
+  const totalBiayaPasang = calculateTotal(data, 'total_biaya');
+  const totalKomisiKolektif = calculateTotal(data, 'nkomisi_kolektif');
+  const totalKomisiPribadi = calculateTotal(data, 'nkomisi_pribadi');
+  const totalBiayaPerbaikan = calculateTotal(data, 'biaya_perbaikan');
+  const totalKomisiPerbaikan = calculateTotal(data, 'komisi_perbaikan');
 
-  const totalGigi40 = safeArray(data).reduce((sum, item) => {
-    if (item?.tarif === 40000) {
-      return ++sum;
+  // Menghitung total komisi pribadi termasuk perbaikan
+  const totalJumlahKomisiPribadi = calculateTotal(data, 'nkomisi_pribadi', item => item?.nkomisi_pribadi > 0)
+    + calculateTotal(data, 'komisi_perbaikan', item => item?.komisi_perbaikan > 0);
+
+  // Total Pendapatan dan Komisi
+  const totalPendapatan = totalBiayaPasang + totalBiayaPerbaikan;
+  const totalKomisi = totalKomisiKolektif + totalKomisiPribadi + totalKomisiPerbaikan;
+
+  // Menghitung jumlah berdasarkan tarif tertentu
+  const totalGigi40 = calculateCount(data, 'tarif', 40000);
+  const totalGigi60 = calculateCount(data, 'tarif', 60000);
+  const totalGigi160 = calculateCount(data, 'tarif', 160000);
+
+  // Mengelompokkan berdasarkan status
+  const groupByStatus = safeArray(data).reduce((acc, item) => {
+    if (item?.ket) {
+      acc[item.ket] = (acc[item.ket] || 0) + 1;
     }
-    return sum;
-  }, 0);
-  const totalGigi60 = safeArray(data).reduce((sum, item) => {
-    if (item?.tarif === 60000) {
-      return ++sum;
-    }
-    return sum;
-  }, 0);
-  const totalGigi160 = safeArray(data).reduce((sum, item) => {
-    if (item?.tarif === 160000) {
-      return ++sum;
-    }
-    return sum;
-  }, 0);
+    return acc;
+  }, {});
 
   const checkPassword = (event) => {
     event.preventDefault();
@@ -151,7 +150,7 @@ const Commissions = () => {
               sx={{ my: 2 }}
             />
             <Button variant="contained" fullWidth type="submit">
-              Simpan
+              Masuk
             </Button>
           </form>
         </Paper>
@@ -223,13 +222,14 @@ const Commissions = () => {
         <>
           <TableContainer
             component={Paper}
-            sx={{ overflow: "auto", maxHeight: "75vh" }}
+            sx={{ maxHeight: "75vh", maxWidth: "89vw" }}
           >
-            <Table>
+            <Table sx={{
+              tableLayout: "fixed"
+            }}>
               <TableHead>
                 <TableRow>
-                  <TableCell>No</TableCell>
-                  <TableCell>Invoice</TableCell>
+                  <TableCell sx={{ width: 10 }}>No</TableCell>
                   <TableCell>Tanggal Transaksi</TableCell>
                   <TableCell>Nama Pasien</TableCell>
                   <TableCell>Tindakan</TableCell>
@@ -256,44 +256,71 @@ const Commissions = () => {
                   );
                   const totalJumlah = totalKomisiPribadi + totalKomisiPerbaikan;
 
+                  const uniqueDates = new Set(
+                    rows.map((r) => r.tanggal).filter(Boolean)
+                  );
+                  const kehadiran = uniqueDates.size;
+
                   return (
                     <React.Fragment key={nama}>
-                      <TableRow hover>
-                        <TableCell>{index + 1}.</TableCell>
+                      <TableRow sx={{
+                        background: "lightseagreen",
+                      }}>
                         <TableCell colSpan={8}>
-                          <strong>
-                            {nama === "null" ? "Belum diproses" : nama}
-                          </strong>
+                          <Tooltip
+                            title={
+                              <Box sx={{ p: 1 }}>
+                                <Typography variant="subtitle2" fontWeight="bold">
+                                  {nama === "null" ? "Belum diproses" : nama}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {kehadiran} hari kehadiran
+                                </Typography>
+                              </Box>
+                            }
+                            arrow
+                            placement="top-start"
+                          >
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "help" }}>
+                              <Typography sx={{ color: "#2E2E2E" }} fontWeight="bold">
+                                {nama === "null" ? "Belum diproses" : nama}
+                              </Typography>
+                              <InfoOutlined sx={{ fontSize: 18, color: "rgba(0,0,0,0.6)" }} />
+                            </Box>
+                          </Tooltip>
                         </TableCell>
                         <TableCell />
                         <TableCell align="right">
-                          {totalKomisiPribadi.toLocaleString()}
+                          <Typography sx={{ color: "#2E2E2E" }} fontWeight="bold">
+                            {totalKomisiPribadi.toLocaleString()}
+                          </Typography>
                         </TableCell>
                         <TableCell />
                         <TableCell align="right">
-                          {totalKomisiPerbaikan.toLocaleString()}
+                          <Typography sx={{ color: "#2E2E2E" }} fontWeight="bold">
+                            {totalKomisiPerbaikan.toLocaleString()}
+                          </Typography>
                         </TableCell>
                         <TableCell align="right">
-                          {totalJumlah.toLocaleString()}
+                          <Typography sx={{ color: "#2E2E2E" }} fontWeight="bold">
+                            {totalJumlah.toLocaleString()}
+                          </Typography>
                         </TableCell>
                       </TableRow>
 
                       {rows.map((row, idx) => (
                         <TableRow hover key={row.id}>
                           <TableCell align="right">
-                            {mode === "harian"
-                              ? String.fromCharCode(97 + idx)
-                              : ++idx}
+                            {idx + 1}
                           </TableCell>
-                          <TableCell>#SK{row.nopendaftaran}#</TableCell>
                           <TableCell>
                             {row?.tanggal
                               ? moment(row.tanggal).format("DD/MM/YYYY")
                               : ""}
                           </TableCell>
-                          <TableCell>{row.nmpasien}</TableCell>
+                          <TableCell>{row?.nama_pasien || row?.nmpasien}</TableCell>
                           <TableCell>{row.nama_tindakan}</TableCell>
-                          <TableCell>{row.ket}</TableCell>
+                          <TableCell>{row?.nama_keterangan}</TableCell>
                           <TableCell align="right">
                             {row.tarif.toLocaleString()}
                           </TableCell>
@@ -334,7 +361,7 @@ const Commissions = () => {
                   }}
                 >
                   <TableCell></TableCell>
-                  <TableCell colSpan={6}>Jumlah</TableCell>
+                  <TableCell colSpan={5}>Jumlah</TableCell>
                   <TableCell align="right">{totalJumlahGigi}</TableCell>
                   <TableCell align="right">
                     {formatCurrency(totalBiayaPasang)}
@@ -360,7 +387,7 @@ const Commissions = () => {
             </Table>
           </TableContainer>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <Stack gap={2} alignItems="center" sx={{ mt: 2 }}>
                 <Typography variant="h6">REKAP TRANSAKSI</Typography>
                 <TableContainer component={Paper}>
@@ -419,7 +446,7 @@ const Commissions = () => {
                 </TableContainer>
               </Stack>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <Stack gap={2} alignItems="center" sx={{ mt: 2 }}>
                 <Typography variant="h6">REKAP PER TARIF GIGI</Typography>
                 <TableContainer component={Paper}>
@@ -442,6 +469,59 @@ const Commissions = () => {
                       <TableRow>
                         <TableCell>Rp. 160.000</TableCell>
                         <TableCell>{totalGigi160}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Stack gap={2} alignItems="center" sx={{ mt: 2 }}>
+                <Typography variant="h6">REKAP PER STATUS</Typography>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Uraian</TableCell>
+                        <TableCell>Jumlah</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Lunas</TableCell>
+                        <TableCell>
+                          {groupByStatus["L"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Free</TableCell>
+                        <TableCell>
+                          {groupByStatus["F"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Garansi</TableCell>
+                        <TableCell>
+                          {groupByStatus["G"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Ambil</TableCell>
+                        <TableCell>
+                          {groupByStatus["A"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>DP</TableCell>
+                        <TableCell>
+                          {groupByStatus["D"] || 0}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Batal</TableCell>
+                        <TableCell>
+                          {groupByStatus["B"] || 0}
+                        </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>

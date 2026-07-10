@@ -7,16 +7,6 @@ import {
   Button,
   Typography,
   Stack,
-  CircularProgress,
-  Box,
-  Divider,
-  TableContainer,
-  Paper,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   Autocomplete,
   TextField,
   Alert,
@@ -27,15 +17,13 @@ import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
 import useListQueue from "../../hooks/useListQueue";
-import { formatCurrency, safeArray } from "../../utils/common";
+import { safeArray } from "../../utils/common";
 import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
+import { Close } from "@mui/icons-material";
+import HistoryPatient from "../patient/detail-patient/HistoryPatient";
 
 const DialogQueue = ({ isOpen, onClose, patient }) => {
-  const {
-    data: rincianData,
-    error,
-    isLoading,
-  } = useListQueue("", patient?.nomorpasien);
+  const listQueue = useListQueue("", patient?.nomorpasien, "all");
   const { data: masterKaryawan } = useFetchKaryawan();
   const [draft, setDraft] = useState({
     tanggal_pelaks: moment(Date.now()).format("YYYY-MM-DD"),
@@ -46,8 +34,7 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
     if (!draft?.tanggal_pelaks) return;
     mutation.mutateAsync({
       ...patient,
-      tanggal_pelaks: draft?.tanggal_pelaks,
-      idkaryawan: draft?.idkaryawan,
+      ...draft,
     });
   };
 
@@ -137,7 +124,7 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
             <Typography variant="subtitle1" fontWeight={600}>
               Riwayat Rincian Pelayanan
             </Typography>
-            <Divider sx={{ my: 2 }} />
+            <HistoryPatient listQueue={listQueue} />
           </Box>
 
           {/* STATE LOADING */}

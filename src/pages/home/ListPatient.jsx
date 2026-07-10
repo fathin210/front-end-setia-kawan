@@ -23,8 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 const fetchPatients = async ({ queryKey }) => {
   const [, { page, search, address }] = queryKey;
   const response = await fetcher(
-    `${
-      import.meta.env.VITE_API_BASE_URL
+    `${import.meta.env.VITE_API_BASE_URL
     }/pasien?page=${page}&limit=20&search=${search}&address=${address}`
   );
   return response;
@@ -42,10 +41,12 @@ const ListPatient = () => {
   // Debounced setter
   const debouncedUpdateSearch = useDebouncedCallback((val) => {
     setSearch(val);
+    setPage(1)
   }, 500);
 
   const debouncedUpdateAddress = useDebouncedCallback((val) => {
     setAddress(val);
+    setPage(1)
   }, 500);
 
   const handleSearchChange = (e) => {
@@ -63,12 +64,14 @@ const ListPatient = () => {
   const clearSearch = () => {
     setSearchInput("");
     setSearch("");
+    localStorage.removeItem("search");
     debouncedUpdateSearch.cancel(); // optional, untuk menghentikan debounce
   };
 
   const clearAddress = () => {
     setAddressInput("");
     setAddress("");
+    localStorage.removeItem("address");
     debouncedUpdateAddress.cancel(); // optional, untuk menghentikan debounce
   };
 
@@ -81,6 +84,27 @@ const ListPatient = () => {
   const handleDialog = (value) => setDialog(value);
   const handlePage = (_, value) => setPage(value);
 
+  useEffect(() => {
+    const savedSearch = localStorage.getItem("search");
+    const savedAddress = localStorage.getItem("address");
+    if (savedSearch) {
+      setSearch(savedSearch);
+      setSearchInput(savedSearch);
+    }
+    if (savedAddress) {
+      setAddress(savedAddress);
+      setAddressInput(savedAddress);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("search", search);
+  }, [search]);
+
+  useEffect(() => {
+    localStorage.setItem("address", address);
+  }, [address]);
+
   return (
     <>
       <Paper
@@ -91,7 +115,7 @@ const ListPatient = () => {
           display: "flex",
           flexDirection: "column",
           gap: 2,
-          height: "100%",
+          height: "calc(83vh - 8px)"
         }}
       >
         <Stack gap={3} sx={{ height: "100%" }}>

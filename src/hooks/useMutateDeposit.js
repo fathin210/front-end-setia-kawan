@@ -19,6 +19,7 @@ export const useCreateDeposit = () => {
         queryKey: ["deposit"],
         type: 'all',
       });
+      queryClient.refetchQueries({ queryKey: ["listQueue"], type: "all" });
       showAlert("Data deposit berhasil diinputkan", "success");
     },
     onError: () => {

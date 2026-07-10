@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -62,6 +62,7 @@ const KomisiKaryawan = () => {
   const [form, setForm] = useState(defaultForm);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
+  const [tarif, setTarif] = useState();
   const [shift, setShift] = useState(1);
   const [jenisGigiFilter, setJenisGigiFilter] = useState(null);
 
@@ -114,6 +115,11 @@ const KomisiKaryawan = () => {
       return;
     }
 
+    // if (!komisi_kolektif || !nkomisi_kolektif) {
+    //   setError("Komisi kolektif dan jumlahnya wajib diisi.");
+    //   return;
+    // }
+
     try {
       const mutation = editing ? updateMutation : createMutation;
       await mutation.mutateAsync(form);
@@ -122,6 +128,7 @@ const KomisiKaryawan = () => {
       setError("Gagal menyimpan data.");
     }
   };
+
 
   return (
     <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>

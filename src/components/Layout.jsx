@@ -53,6 +53,10 @@ const Layout = () => {
       "/login",
       "/settings",
       "/employee/comissions",
+      "/employee/admin",
+      "/patient/deposit",
+      "/settings/tarif-komisi-gigi",
+      "/settings/komisi-karyawan-shift",
     ];
     if (unexpandedPages.includes(location.pathname)) {
       setOpen(false);

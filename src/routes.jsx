@@ -69,7 +69,7 @@ export const routes = [
   {
     text: "Karyawan",
     icon: <People />,
-    roles: ["admin"], // hanya admin
+    roles: ["admin", "user"], // hanya admin
     children: [
       {
         path: ROUTES.ADMIN_EMPLOYEE,

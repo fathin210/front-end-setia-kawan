@@ -2,20 +2,9 @@ import React, { useState } from "react";
 import {
   Container,
   Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Card,
   CardContent,
   Grid,
-  Divider,
-  Box,
-  CircularProgress,
-  Alert,
   Stack,
   Avatar,
   Button,
@@ -40,6 +29,9 @@ import DialogQueue from "../../home/DialogQueue";
 import DialogMoveTransaction from "./DialogMoveTransaction";
 import MaleImage from "../../../assets/male.png";
 import FemaleImage from "../../../assets/female.png";
+import HistoryPatient from "./HistoryPatient";
+import { useDeletePatient } from "../../../hooks/useMutatePatient";
+import { useNavigate } from "react-router-dom";
 
 const DetailPatient = () => {
   const { activePatient } = usePatientStore();
@@ -109,8 +101,8 @@ const DetailPatient = () => {
                 activePatient?.jnskel === "L"
                   ? MaleImage
                   : activePatient?.jnskel === "P"
-                  ? FemaleImage
-                  : undefined // Tidak pakai src kalau gender tidak ada
+                    ? FemaleImage
+                    : undefined // Tidak pakai src kalau gender tidak ada
               }
               sx={{
                 width: 90,
@@ -118,8 +110,8 @@ const DetailPatient = () => {
                 backgroundColor: !activePatient?.jnskel
                   ? "grey.300" // Warna abu-abu untuk gender tidak diketahui
                   : activePatient?.jnskel === "L"
-                  ? "#90caf9"
-                  : "#f48fb1",
+                    ? "#90caf9"
+                    : "#f48fb1",
               }}
             >
               {!activePatient?.jnskel && <Person sx={{ fontSize: 50 }} />}
@@ -298,7 +290,7 @@ const DetailPatient = () => {
           isOpen={true}
           editData={activePatient}
           handleDialog={handleDialog}
-          refetch={refetch}
+          refetch={listQueue.refetch}
         />
       )}
       {dialog === ADD_QUEUE && (

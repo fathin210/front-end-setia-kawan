@@ -62,18 +62,56 @@ import {
   useUpdateQueueStatus,
 } from "../../hooks/useMutateQueue";
 import DialogDeposit from "./DialogDeposit";
+import DialogStatus from "./DialogStatus";
+import usePdfStore from "../../store/pdfStore";
+import { useFetchPDFCard } from "../../hooks/useFetchPDFCard";
+import DialogUbahAntrian from "./DialogUbahAntrian";
 
 const ListQueue = () => {
+  const { openDialog, setLoading, setPdfURL, setError } = usePdfStore()
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [dialog, setDialog] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [status, setStatus] = useState("process");
 
-  const debouncedSetSearch = useDebouncedCallback((value) => {
+  const { refetch } = useFetchPDFCard(null, selectedQueue?.nomorpasien, {
+    enabled: false,
+  });
+
+  const handlePrintCard = async () => {
+    try {
+      openDialog("Kartu Pasien");
+      setLoading(true);
+      const { data } = await refetch();
+      if (data) {
+        const url = URL.createObjectURL(data);
+        setPdfURL(url);
+        setLoading(false);
+      }
+    } catch (error) {
+      setError(error?.message);
+    }
+  };
+
+  const debouncedUpdateSearch = useDebouncedCallback((value) => {
     setSearch(value);
   }, 500);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedUpdateSearch(value);
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearch("");
+    debouncedUpdateSearch.cancel(); // optional, untuk menghentikan debounce
+  };
+
 
   const { data, error, isLoading } = useListQueue(
     date,
@@ -131,15 +169,27 @@ const ListQueue = () => {
           <TextField
             placeholder="Cari Pasien (Tindakan Hari Ini)"
             name="search"
-            onChange={(event) => debouncedSetSearch(event.target.value)}
+            value={searchInput}
+            onChange={handleSearchChange}
             fullWidth
             autoComplete="off"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="start">
+                    {searchInput && (
+                      <IconButton onClick={clearSearch}>
+                        <Close />
+                      </IconButton>
+                    )}
+                  </InputAdornment>
+                )
+              }
             }}
             sx={{ flex: 1 }}
           />
@@ -287,7 +337,7 @@ const ListQueue = () => {
         </MenuItem>
         <MenuItem
           onClick={() => {
-            handleDialogOpen(CLEAR_QUEUE);
+            handlePrintCard()
             handleMenuClose();
           }}
         >

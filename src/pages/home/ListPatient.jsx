@@ -1,5 +1,6 @@
 import {
   Alert,
+  Box,
   Button,
   CircularProgress,
   IconButton,
@@ -11,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
-import { Add, Close, Search } from "@mui/icons-material";
+import { Add, Close, LocationOn, People, Search } from "@mui/icons-material";
 import PatientCard from "./PatientCard";
 import { fetcher } from "../../utils/fetcher";
 import { safeArray } from "../../utils/common";
@@ -145,6 +146,11 @@ const ListPatient = () => {
               autoComplete="off"
               margin="normal"
               InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LocationOn />
+                  </InputAdornment>
+                ),
                 endAdornment: (
                   <InputAdornment position="end">
                     {addressInput && (
@@ -158,26 +164,33 @@ const ListPatient = () => {
             />
           </Stack>
 
-          <Stack gap={3} sx={{ flexGrow: 1, overflow: "auto", height: "54vh" }}>
+          <Stack gap={2} sx={{ flexGrow: 1, overflow: "auto", height: "54vh" }}>
             {error ? (
               <Alert severity="error" sx={{ mb: 2 }}>
                 Terjadi kesalahan saat mengambil data: {error.message}
               </Alert>
             ) : isLoading ? (
               <CircularProgress sx={{ m: "auto" }} />
+            ) : safeArray(data?.data).length === 0 ? (
+              <Stack alignItems="center" justifyContent="center" gap={1} sx={{ m: "auto", color: "text.secondary" }}>
+                <People fontSize="large" />
+                <Typography variant="body2">Tidak ada pasien ditemukan</Typography>
+              </Stack>
             ) : (
               safeArray(data?.data).map((item, index) => (
                 <PatientCard data={item} key={index} />
               ))
             )}
           </Stack>
-          <Pagination
-            color="primary"
-            shape="rounded"
-            page={page}
-            onChange={handlePage}
-            count={data?.total_pages}
-          />
+          <Box display="flex" justifyContent="center">
+            <Pagination
+              color="primary"
+              shape="rounded"
+              page={page}
+              onChange={handlePage}
+              count={data?.total_pages}
+            />
+          </Box>
         </Stack>
       </Paper>
       <DialogPatientForm

@@ -3,11 +3,14 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   IconButton,
-  Typography,
+  Button,
+  Box,
+  Alert,
   CircularProgress,
 } from "@mui/material";
-import { Close } from "@mui/icons-material";
+import { Close, Download, PictureAsPdf } from "@mui/icons-material";
 import Pdf from "./Pdf";
 import usePdfStore from "../store/pdfStore";
 
@@ -16,29 +19,53 @@ const DialogPdf = () => {
     usePdfStore();
 
   return (
-    <Dialog open={isDialogOpen} fullWidth maxWidth="md">
-      <DialogTitle>{title}</DialogTitle>
+    <Dialog open={isDialogOpen} onClose={closeDialog} fullWidth maxWidth="md">
+      <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <PictureAsPdf color="primary" />
+        {title}
+      </DialogTitle>
       <IconButton
         aria-label="close"
         onClick={closeDialog}
-        sx={(theme) => ({
+        sx={{
           position: "absolute",
           right: 8,
           top: 8,
-          color: theme.palette.grey[500],
-        })}
+          color: "text.secondary",
+        }}
       >
         <Close />
       </IconButton>
-      <DialogContent>
+      <DialogContent dividers>
         {loading ? (
-          <CircularProgress sx={{ m: "auto" }} />
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "70vh" }}>
+            <CircularProgress />
+          </Box>
         ) : error ? (
-          <Typography>{error}</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", minHeight: "70vh" }}>
+            <Alert severity="error" sx={{ width: "100%" }}>
+              {error}
+            </Alert>
+          </Box>
         ) : (
           <Pdf pdfURL={pdfURL} title={title} />
         )}
       </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={closeDialog} variant="outlined" color="inherit">
+          Tutup
+        </Button>
+        <Button
+          component="a"
+          href={pdfURL || undefined}
+          download={`${title || "dokumen"}.pdf`}
+          disabled={!pdfURL || loading || Boolean(error)}
+          variant="contained"
+          startIcon={<Download />}
+        >
+          Unduh
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

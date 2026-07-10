@@ -1,7 +1,9 @@
 // src/routes.js
 import React from "react";
 import {
+  Category,
   Dashboard as DashboardIcon,
+  Handyman,
   Home as HomeIcon,
   MonetizationOn,
   People,
@@ -14,13 +16,14 @@ import Home from "./pages/home/Home";
 import ROUTES from "./constants/routes";
 import AdminEmployee from "./pages/employee/admin-employee/AdminEmployee";
 import Commissions from "./pages/employee/commissions/Commissions";
-import TarifKomisiGigi from "./pages/settings/tarif-komisi-gigi/TarifKomisiGigi";
 import KomisiKaryawan from "./pages/settings/komisi-karyawan/KomisiKaryawan";
 import Earning from "./pages/earning/earning/Earning";
 import SummaryEarning from "./pages/earning/summary-earning/SummaryEarning";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Deposit from "./pages/patient/deposit/Deposit";
 import Login from "./pages/login/Login";
+import JenisGigi from "./pages/settings/jenis-gigi/JenisGigi";
+import KomisiPerbaikan from "./pages/settings/komisi-perbaikan/KomisiPerbaikan";
 
 export const routes = [
   {
@@ -117,10 +120,10 @@ export const routes = [
     roles: ["admin"], // hanya admin
     children: [
       {
-        path: ROUTES.TARIF_KOMISI_GIGI,
-        element: <TarifKomisiGigi />,
-        text: "Tarif dan Komisi 'Per' Gigi",
-        icon: <MonetizationOn />,
+        path: ROUTES.KOMISI_PERBAIKAN,
+        element: <KomisiPerbaikan />,
+        text: "Komisi Perbaikan",
+        icon: <Handyman />,
         roles: ["admin"],
         showInSidebar: true,
       },
@@ -129,6 +132,14 @@ export const routes = [
         element: <KomisiKaryawan />,
         text: "Komisi / Shift",
         icon: <RequestQuote />,
+        roles: ["admin"],
+        showInSidebar: true,
+      },
+      {
+        path: ROUTES.JENIS_GIGI,
+        element: <JenisGigi />,
+        text: "Jenis Gigi",
+        icon: <Category />,
         roles: ["admin"],
         showInSidebar: true,
       },

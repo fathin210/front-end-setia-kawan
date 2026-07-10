@@ -8,16 +8,19 @@ export const lightTheme = createMuiTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#155dfc',
+      main: '#0d9488', // teal - klinik, bersih, menenangkan
     },
     secondary: {
-      main: '#f50057',
+      main: '#ea580c', // deep orange - complementary ke teal, beda hue dari warning/error
     },
     success: {
-      main: '#00a63e',
+      main: '#16a34a',
     },
     warning: {
-      main: '#f0b100',
+      main: '#f59e0b',
+    },
+    error: {
+      main: '#dc2626',
     },
   },
   components: {
@@ -42,20 +45,23 @@ export const darkTheme = createMuiTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#155dfc',
+      main: '#2dd4bf', // teal lebih terang biar tetap kontras di background gelap
     },
     secondary: {
-      main: '#f50057',
+      main: '#fb923c',
     },
     success: {
-      main: '#00a63e',
+      main: '#22c55e',
     },
     warning: {
-      main: '#f0b100',
+      main: '#f59e0b',
+    },
+    error: {
+      main: '#ef4444',
     },
     background: {
-      default: '#111828',
-      paper: '#181F2E',
+      default: '#0c1716', // dark slate dengan undertone teal
+      paper: '#132523',
     },
   },
   components: {

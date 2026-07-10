@@ -29,7 +29,7 @@ export const useAddToQueueMutation = (onComplete) => {
         nkomisi_pribadi2: 0,
         biaya_perbaikan: 0,
         komisi_perbaikan: 0,
-        ket: "",
+        ket: null,
         dp: 0,
       });
     },
@@ -73,7 +73,7 @@ export const useClearQueueMutation = ({ onComplete }) => {
         nkomisi_pribadi2: 0,
         biaya_perbaikan: 0,
         komisi_perbaikan: 0,
-        ket: "",
+        ket: null,
         dp: 0,
         kdtindakan: null,
         idkaryawan: null,
@@ -117,6 +117,65 @@ export const useUpdateQueue = (onComplete = () => { }) => {
     onError: (error) => {
       console.error("Error:", error);
       showAlert("Gagal mengupdate data rincian!", "error");
+    },
+  });
+};
+
+export const useMoveQueueMutation = () => {
+  const { showAlert } = useAlertStore.getState();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, nomorpasien_tujuan }) =>
+      putFetcher(`${baseURL}/${id}/pindahkan`, { nomorpasien_tujuan }),
+    onMutate: () => {
+      showAlert("Memproses permintaan...", "waiting");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["listQueue"]);
+      showAlert("Transaksi berhasil dipindahkan", "success");
+    },
+    onError: () => {
+      showAlert("Gagal memindahkan transaksi!", "error");
+    },
+  });
+};
+
+export const useUpdateQueueStatus = () => {
+  const { showAlert } = useAlertStore.getState();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, ket }) => putFetcher(`${baseURL}/${id}/status`, { ket }),
+    onMutate: () => {
+      showAlert("Memproses permintaan...", "waiting");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["listQueue"]);
+      showAlert("Status berhasil diubah", "success");
+    },
+    onError: () => {
+      showAlert("Gagal mengubah status!", "error");
+    },
+  });
+};
+
+export const useUpdateQueueTindakan = () => {
+  const { showAlert } = useAlertStore.getState();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, kdtindakan, idkaryawan }) =>
+      putFetcher(`${baseURL}/${id}/tindakan`, { kdtindakan, idkaryawan }),
+    onMutate: () => {
+      showAlert("Memproses permintaan...", "waiting");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["listQueue"]);
+      showAlert("Antrian berhasil diubah", "success");
+    },
+    onError: () => {
+      showAlert("Gagal mengubah antrian!", "error");
     },
   });
 };

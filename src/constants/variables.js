@@ -5,9 +5,5 @@ export const CONFIRM_DELETE = "CONFIRM_DELETE"
 export const CLEAR_QUEUE = "CLEAR_QUEUE"
 export const DEPOSIT = "DEPOSIT"
 export const EDIT_PATIENT = "EDIT_PATIENT"
-
-export const kategoriMap = {
-  "160000": "00",
-  "40000": "40",
-  "60000": "60",
-};
+export const EDIT_STATUS = "EDIT_STATUS"
+export const EDIT_QUEUE = "EDIT_QUEUE"

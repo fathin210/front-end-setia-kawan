@@ -6,14 +6,17 @@ import {
   DialogTitle,
   FormControl,
   FormControlLabel,
+  FormHelperText,
   FormLabel,
   Radio,
   RadioGroup,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
+import { PersonAdd } from "@mui/icons-material";
 import moment from "moment";
 import { useForm, Controller } from "react-hook-form";
 import { useSubmitPatient } from "../../hooks/useMutatePatient";
@@ -84,133 +87,146 @@ const DialogPatientForm = ({ isOpen, handleDialog, editData }) => {
 
   return (
     <Dialog maxWidth="md" fullWidth open={isOpen}>
-      <DialogTitle>
+      <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <PersonAdd color="primary" />
         {editData ? "Edit Data Pasien" : "Registrasi Pasien Baru"}
       </DialogTitle>
-      <DialogContent>
-        <form onSubmit={handleSubmit(onSubmit)}>
+      <DialogContent dividers>
+        <form onSubmit={handleSubmit(onSubmit)} id="patient-form">
           <Stack gap={3}>
-            <Controller
-              name="nmpasien"
-              control={control}
-              rules={{ required: "Nama pasien wajib diisi" }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Nama Pasien"
-                  placeholder="Masukkan nama pasien"
-                  fullWidth
-                  error={!!errors.nmpasien}
-                  helperText={errors.nmpasien?.message}
-                />
-              )}
-            />
-
-            <Stack direction="row" justifyContent="space-between" gap={4}>
+            <Stack gap={2}>
+              <Typography variant="overline" color="text.secondary">
+                Data Diri
+              </Typography>
               <Controller
-                name="temp_lahir"
+                name="nmpasien"
+                control={control}
+                rules={{ required: "Nama pasien wajib diisi" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Nama Pasien"
+                    placeholder="Masukkan nama pasien"
+                    required
+                    fullWidth
+                    error={!!errors.nmpasien}
+                    helperText={errors.nmpasien?.message}
+                  />
+                )}
+              />
+
+              <FormControl error={!!errors.jnskel}>
+                <FormLabel required>Jenis Kelamin</FormLabel>
+                <Controller
+                  name="jnskel"
+                  control={control}
+                  rules={{ required: "Jenis kelamin wajib dipilih" }}
+                  render={({ field }) => (
+                    <RadioGroup row {...field}>
+                      <FormControlLabel
+                        value="L"
+                        control={<Radio />}
+                        label="Laki-laki"
+                      />
+                      <FormControlLabel
+                        value="P"
+                        control={<Radio />}
+                        label="Perempuan"
+                      />
+                    </RadioGroup>
+                  )}
+                />
+                {errors.jnskel && (
+                  <FormHelperText>{errors.jnskel.message}</FormHelperText>
+                )}
+              </FormControl>
+
+              <Stack direction="row" justifyContent="space-between" gap={4}>
+                <Controller
+                  name="temp_lahir"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Tempat Lahir"
+                      placeholder="Masukkan Tempat Lahir"
+                      sx={{ flex: 1 }}
+                    />
+                  )}
+                />
+                <Controller
+                  name="tgl_lahir"
+                  control={control}
+                  render={({ field }) => (
+                    <DesktopDatePicker
+                      {...field}
+                      label="Tanggal Lahir"
+                      format="DD/MM/YYYY"
+                      value={field.value || null}
+                      onChange={(date) => field.onChange(date)}
+                      sx={{ flex: 1 }}
+                      slotProps={{
+                        actionBar: { actions: ["today"] },
+                      }}
+                    />
+                  )}
+                />
+              </Stack>
+            </Stack>
+
+            <Stack gap={2}>
+              <Typography variant="overline" color="text.secondary">
+                Kontak &amp; Alamat
+              </Typography>
+              <Controller
+                name="alamat"
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Tempat Lahir"
-                    placeholder="Masukkan Tempat Lahir"
-                    sx={{ flex: 1 }}
+                    label="Alamat"
+                    placeholder="Masukkan Alamat"
+                    fullWidth
                   />
                 )}
               />
               <Controller
-                name="tgl_lahir"
+                name="telp"
                 control={control}
                 render={({ field }) => (
-                  <DesktopDatePicker
+                  <TextField
                     {...field}
-                    label="Tanggal Lahir"
-                    format="DD/MM/YYYY"
-                    value={field.value || null}
-                    onChange={(date) => field.onChange(date)}
-                    sx={{ flex: 1 }}
-                    slotProps={{
-                      actionBar: { actions: ["today"] },
-                    }}
+                    label="No. Telepon / HP"
+                    placeholder="Masukkan Nomor Telepon"
+                    type="tel"
+                    fullWidth
                   />
                 )}
               />
             </Stack>
-
-            <Controller
-              name="alamat"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Alamat"
-                  placeholder="Masukkan Alamat"
-                  fullWidth
-                />
-              )}
-            />
-
-            <FormControl error={!!errors.jnskel}>
-              <FormLabel>Jenis Kelamin</FormLabel>
-              <Controller
-                name="jnskel"
-                control={control}
-                rules={{ required: "Jenis kelamin wajib dipilih" }}
-                render={({ field }) => (
-                  <RadioGroup row {...field}>
-                    <FormControlLabel
-                      value="L"
-                      control={<Radio />}
-                      label="Laki-laki"
-                    />
-                    <FormControlLabel
-                      value="P"
-                      control={<Radio />}
-                      label="Perempuan"
-                    />
-                  </RadioGroup>
-                )}
-              />
-              {errors.jnskel && (
-                <p style={{ color: "red", fontSize: 12 }}>
-                  {errors.jnskel.message}
-                </p>
-              )}
-            </FormControl>
-
-            <Controller
-              name="telp"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="No. Telepon / HP"
-                  placeholder="Masukkan Nomor Telepon"
-                  type="tel"
-                  fullWidth
-                />
-              )}
-            />
           </Stack>
-
-          <DialogActions sx={{ mt: 4 }}>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => {
-                handleDialog(null);
-                reset(initialState);
-              }}
-            >
-              Tutup
-            </Button>
-            <Button variant="contained" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Menyimpan..." : editData ? "Perbarui" : "Simpan"}
-            </Button>
-          </DialogActions>
         </form>
       </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button
+          variant="outlined"
+          color="inherit"
+          onClick={() => {
+            handleDialog(null);
+            reset(initialState);
+          }}
+        >
+          Tutup
+        </Button>
+        <Button
+          variant="contained"
+          type="submit"
+          form="patient-form"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Menyimpan..." : editData ? "Perbarui" : "Simpan"}
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

@@ -10,12 +10,13 @@ import {
   Autocomplete,
   FormControl,
   FormLabel,
+  FormHelperText,
   RadioGroup,
   FormControlLabel,
   Radio,
   Grid,
-  Card,
-  CardContent,
+  Stack,
+  Divider,
   TableContainer,
   Table,
   TableBody,
@@ -23,24 +24,27 @@ import {
   TableCell,
   Paper,
   Box,
+  alpha,
 } from "@mui/material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import { useForm, Controller } from "react-hook-form";
 import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
+import { useFetchJenisGigi } from "../../hooks/useFetchJenisGigi";
 import { formatCurrency, safeArray } from "../../utils/common";
 import {
   useCreateDeposit,
   useUpdateDeposit,
 } from "../../hooks/useMutateDeposit";
 import { useFetchPDFDeposit } from "../../hooks/useFetchPDFDeposit";
-import { Print } from "@mui/icons-material";
+import { Print, RequestQuote } from "@mui/icons-material";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
 import usePdfStore from "../../store/pdfStore";
 import { CONFIRM_DELETE } from "../../constants/variables";
 
 const DialogDeposit = ({ isOpen, onClose, data }) => {
   const { data: masterKaryawan } = useFetchKaryawan();
+  const { data: jenisGigi } = useFetchJenisGigi();
   const mutation = useCreateDeposit();
   const editMutation = useUpdateDeposit();
   const addToQueue = useAddToQueueMutation();
@@ -62,11 +66,11 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
     control,
     handleSubmit,
     formState: { errors },
-    getValues,
     watch,
   } = useForm({ defaultValues });
 
   const jumlahTagihan = watch("tarif_per_gigi") * watch("jumlah_gigi");
+  const sisaPembayaran = jumlahTagihan - watch("jumlah");
 
   const [iddpResult, setIddpResult] = useState(data?.iddp);
 
@@ -112,24 +116,49 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
 
   return (
     <>
-      <Dialog open={isOpen} fullWidth maxWidth="sm">
-        <DialogTitle>Input Deposit</DialogTitle>
-        <DialogContent>
+      <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <RequestQuote color="primary" />
+          Input Deposit
+        </DialogTitle>
+        <DialogContent dividers>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="body1">
-                    <strong>ID Pasien:</strong> {data?.nomorpasien || "-"}
+              <Stack
+                direction="row"
+                flexWrap="wrap"
+                gap={3}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+                }}
+              >
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    ID Pasien
                   </Typography>
-                  <Typography variant="body1">
-                    <strong>Nama:</strong> {data?.nmpasien || "-"}
+                  <Typography variant="body1" fontWeight={600}>
+                    {data?.nomorpasien || "-"}
                   </Typography>
-                  <Typography variant="body1">
-                    <strong>Alamat:</strong> {data?.alamat || "-"}
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Nama
                   </Typography>
-                </CardContent>
-              </Card>
+                  <Typography variant="body1" fontWeight={600}>
+                    {data?.nama_pasien || "-"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Alamat
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {data?.alamat || "-"}
+                  </Typography>
+                </Box>
+              </Stack>
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -282,7 +311,7 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
 
             <Grid item xs={12}>
               <FormControl fullWidth error={Boolean(errors.tarif_per_gigi)}>
-                <FormLabel>Tarif Per Gigi</FormLabel>
+                <FormLabel required>Tarif Per Gigi</FormLabel>
                 <Controller
                   name="tarif_per_gigi"
                   control={control}
@@ -293,107 +322,98 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
                       value={field.value}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     >
-                      <FormControlLabel
-                        control={<Radio />}
-                        value={40000}
-                        label="40.000"
-                      />
-                      <FormControlLabel
-                        control={<Radio />}
-                        value={60000}
-                        label="60.000"
-                      />
-                      <FormControlLabel
-                        control={<Radio />}
-                        value={160000}
-                        label="160.000"
-                      />
+                      {safeArray(jenisGigi).map((item) => (
+                        <FormControlLabel
+                          key={item.id}
+                          control={<Radio />}
+                          value={item.tarif}
+                          label={formatCurrency(item.tarif)}
+                        />
+                      ))}
                     </RadioGroup>
                   )}
                 />
                 {errors.tarif_per_gigi && (
-                  <Typography color="error" variant="caption">
-                    {errors.tarif_per_gigi.message}
-                  </Typography>
+                  <FormHelperText>{errors.tarif_per_gigi.message}</FormHelperText>
                 )}
               </FormControl>
             </Grid>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Grid container spacing={2} p={2}>
-            <Grid item xs={12}>
-              <TableContainer component={Paper} sx={{ mt: 2 }}>
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>
-                        <Typography fontWeight="bold">
-                          Jumlah Tagihan
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography fontWeight="bold">
-                          {formatCurrency(jumlahTagihan)}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <Typography fontWeight="bold">Deposit</Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography fontWeight="bold">
-                          - {formatCurrency(watch("jumlah"))}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <Typography fontWeight="bold">{jumlahTagihan - watch("jumlah") > 0 ? "Sisa Pembayaran" : "Kelebihan Pembayaran"}</Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography fontWeight="bold">
-                          {formatCurrency(jumlahTagihan - watch("jumlah"))}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Grid>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={2}>
-                <Button onClick={onClose} variant="contained" color="error">
-                  Tutup
-                </Button>
-                <Button
-                  onClick={handleSubmit(onSubmit)}
-                  color="primary"
-                  variant="contained"
-                  disabled={mutation.isLoading}
+
+          {/* Ringkasan */}
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle1" fontWeight={600} mb={1}>
+            Ringkasan
+          </Typography>
+          <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <Typography>Jumlah Tagihan</Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography>{formatCurrency(jumlahTagihan)}</Typography>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <Typography>Deposit</Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography>- {formatCurrency(watch("jumlah"))}</Typography>
+                  </TableCell>
+                </TableRow>
+                <TableRow
+                  sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06) }}
                 >
-                  {mutation.isLoading ? "Menambahkan..." : "Simpan"}
-                </Button>
-                {iddpResult && (
-                  <Button
-                    loading={isFetching}
-                    onClick={handlePrintDeposit}
-                    color="success"
-                    variant="contained"
-                    disabled={!iddpResult}
-                    startIcon={<Print />}
-                  >
-                    Cetak Deposit
-                  </Button>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
+                  <TableCell>
+                    <Typography fontWeight={700}>
+                      {sisaPembayaran >= 0 ? "Sisa Pembayaran" : "Kelebihan Pembayaran"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography
+                      fontWeight={700}
+                      color={sisaPembayaran < 0 ? "error.main" : "text.primary"}
+                    >
+                      {formatCurrency(sisaPembayaran)}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={onClose} variant="outlined" color="inherit">
+            Tutup
+          </Button>
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            color="primary"
+            variant="contained"
+            disabled={mutation.isLoading}
+          >
+            {mutation.isLoading ? "Menambahkan..." : "Simpan"}
+          </Button>
+          {iddpResult && (
+            <Button
+              loading={isFetching}
+              onClick={handlePrintDeposit}
+              color="success"
+              variant="contained"
+              disabled={!iddpResult}
+              startIcon={<Print />}
+            >
+              Cetak Deposit
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
       {dialog === CONFIRM_DELETE && (
-        <Dialog open>
+        <Dialog open onClose={() => setDialog(false)}>
+          <DialogTitle>Daftarkan ke Antrian?</DialogTitle>
           <DialogContent>
             <Typography>
               {`Apakah kamu ingin mendaftarkan pasien ini di tanggal ${moment(
@@ -401,8 +421,8 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
               ).format("DD/MM/YYYY")}?`}
             </Typography>
           </DialogContent>
-          <DialogActions>
-            <Button variant="contained" onClick={() => setDialog(false)}>
+          <DialogActions sx={{ p: 2 }}>
+            <Button variant="outlined" color="inherit" onClick={() => setDialog(false)}>
               Tutup
             </Button>
             <Button
@@ -414,12 +434,14 @@ const DialogDeposit = ({ isOpen, onClose, data }) => {
                     tanggal_pelaks: watch("tanggal_diambil"),
                   });
                   setDialog(false);
-                } catch (error) {}
+                } catch {
+                  setDialog(false);
+                }
               }}
-              color="error"
+              color="primary"
               disabled={addToQueue.isPending}
             >
-              {addToQueue.isPending ? "Memproses..." : "Ya, daftarkan"}
+              {addToQueue.isPending ? "Memproses..." : "Ya, Daftarkan"}
             </Button>
           </DialogActions>
         </Dialog>

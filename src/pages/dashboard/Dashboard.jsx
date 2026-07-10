@@ -23,7 +23,12 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { People, CalendarMonth, MonetizationOn } from "@mui/icons-material";
+import {
+  People,
+  CalendarMonth,
+  MonetizationOn,
+  PersonAddAlt,
+} from "@mui/icons-material";
 import { useFetchDashboard } from "../../hooks/useRekapPendapatan";
 
 const InfoCard = ({ icon: Icon, title, value, color }) => {
@@ -164,7 +169,7 @@ const Dashboard = () => {
       </Typography>
 
       <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <InfoCard
             icon={People}
             title="Pasien Hari Ini"
@@ -172,7 +177,7 @@ const Dashboard = () => {
             color={theme.palette.primary.main}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <InfoCard
             icon={CalendarMonth}
             title="Pasien Bulan Ini"
@@ -180,7 +185,15 @@ const Dashboard = () => {
             color={theme.palette.info.main}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
+          <InfoCard
+            icon={PersonAddAlt}
+            title="Pasien Baru (< 2 Transaksi)"
+            value={data?.jumlah_pasien_baru_transaksi_kurang_2 || 0}
+            color={theme.palette.warning.main}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
           <InfoCard
             icon={MonetizationOn}
             title="Pendapatan Hari Ini"

@@ -11,6 +11,7 @@ import {
   Divider,
   styled,
   Collapse,
+  alpha,
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { filterRoutesByRole, routes } from "../routes.jsx";
@@ -94,12 +95,14 @@ const Sidebar = ({ open, hover, setHover }) => {
                     px: 2.5,
                     borderRadius: 2,
                     backgroundColor: isActive
-                      ? "rgba(33, 150, 243, 0.1)"
+                      ? (theme) => alpha(theme.palette.primary.main, 0.1)
                       : "transparent",
                     color: isActive ? "primary.main" : "inherit",
                     transition: "all 0.3s",
                     width: "100%",
-                    "&:hover": { backgroundColor: "rgba(33, 150, 243, 0.2)" },
+                    "&:hover": (theme) => ({
+                      backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                    }),
                   }}
                 >
                   <ListItemIcon
@@ -148,13 +151,13 @@ const Sidebar = ({ open, hover, setHover }) => {
                               pl: 3,
                               borderRadius: 2,
                               backgroundColor: isChildActive
-                                ? "rgba(33, 150, 243, 0.15)"
+                                ? (theme) => alpha(theme.palette.primary.main, 0.15)
                                 : "transparent",
                               color: isChildActive ? "primary.main" : "inherit",
                               transition: "all 0.3s",
-                              "&:hover": {
-                                backgroundColor: "rgba(33, 150, 243, 0.25)",
-                              },
+                              "&:hover": (theme) => ({
+                                backgroundColor: alpha(theme.palette.primary.main, 0.25),
+                              }),
                             }}
                           >
                             <ListItemIcon

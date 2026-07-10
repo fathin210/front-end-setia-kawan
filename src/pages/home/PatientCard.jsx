@@ -7,12 +7,15 @@ import {
   Print,
 } from "@mui/icons-material";
 import {
+  Avatar,
+  Chip,
   IconButton,
   Menu,
   MenuItem,
   Stack,
   Typography,
   CircularProgress,
+  alpha,
 } from "@mui/material";
 import React, { useState } from "react";
 import { useFetchPDFCard } from "../../hooks/useFetchPDFCard";
@@ -22,6 +25,12 @@ import usePatientStore from "../../store/patientStore";
 import { ADD_QUEUE, PRINT } from "../../constants/variables";
 import DialogQueue from "./DialogQueue";
 import usePdfStore from "../../store/pdfStore";
+import { getInitials } from "../../utils/common";
+
+const GENDER = {
+  L: { label: "Laki-laki", icon: <Male fontSize="small" />, color: "#2b7fff" },
+  P: { label: "Perempuan", icon: <Female fontSize="small" />, color: "#f6339a" },
+};
 
 const PatientCard = ({ data }) => {
   const navigate = useNavigate();
@@ -64,6 +73,8 @@ const PatientCard = ({ data }) => {
     handleClose();
   };
 
+  const gender = GENDER[data?.jnskel];
+
   return (
     <Stack
       direction="row"
@@ -72,34 +83,55 @@ const PatientCard = ({ data }) => {
       sx={{
         p: 2,
         borderRadius: 3,
-        border: "1px solid #d0d5dd",
+        border: 1,
+        borderColor: "divider",
+        transition: "all 0.2s",
+        "&:hover": {
+          borderColor: "primary.main",
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+        },
       }}
     >
-      <Stack sx={{ width: 250 }}>
-        <Stack direction="row" alignItems="center" gap={1}>
-          <Typography variant="body1">{data?.nmpasien}</Typography>
-          {data?.jnskel === "L" ? (
-            <Male
-              fontSize="small"
-              sx={{ background: "#2b7fff", borderRadius: "100%" }}
-            />
-          ) : data?.jnskel === "P" ? (
-            <Female
-              fontSize="small"
-              sx={{ background: "#f6339a", borderRadius: "100%" }}
-            />
-          ) : null}
+      <Stack direction="row" alignItems="center" gap={2} sx={{ minWidth: 0, flex: 1 }}>
+        <Avatar
+          sx={{
+            bgcolor: gender ? alpha(gender.color, 0.15) : "action.selected",
+            color: gender ? gender.color : "text.secondary",
+          }}
+        >
+          {getInitials(data?.nmpasien)}
+        </Avatar>
+        <Stack sx={{ minWidth: 0 }}>
+          <Stack direction="row" alignItems="center" gap={1}>
+            <Typography variant="body1" fontWeight={600} noWrap>
+              {data?.nmpasien}
+            </Typography>
+            {gender && (
+              <Chip
+                size="small"
+                icon={gender.icon}
+                label={gender.label}
+                sx={{
+                  bgcolor: alpha(gender.color, 0.12),
+                  color: gender.color,
+                  "& .MuiChip-icon": { color: gender.color },
+                }}
+              />
+            )}
+          </Stack>
+          <Typography variant="caption" color="text.secondary">
+            No. Kartu {data?.nomorpasien}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {data?.alamat || "-"}
+          </Typography>
         </Stack>
-        <Typography variant="caption">No. Kartu {data?.nomorpasien}</Typography>
-        <Typography variant="caption">{data?.alamat || "-"}</Typography>
       </Stack>
 
       {/* Button Menu */}
-      <Stack direction="row" gap={1}>
-        <IconButton onClick={handleMenuClick}>
-          <MoreVert />
-        </IconButton>
-      </Stack>
+      <IconButton onClick={handleMenuClick}>
+        <MoreVert />
+      </IconButton>
 
       {/* Menu Dropdown */}
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>

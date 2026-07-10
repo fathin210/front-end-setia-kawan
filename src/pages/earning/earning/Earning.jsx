@@ -120,6 +120,7 @@ const Earning = () => {
                 <TableCell>Nama Pasien</TableCell>
                 <TableCell>Tindakan</TableCell>
                 <TableCell>Teknisi</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell>Jml Gigi</TableCell>
                 <TableCell>Biaya Pasang</TableCell>
                 <TableCell>Biaya Perbaikan</TableCell>
@@ -129,16 +130,17 @@ const Earning = () => {
             <TableBody>
               {safeArray(data).map((row, idx) => (
                 <TableRow hover key={row.id}>
-                  <TableCell align="right">{++idx}</TableCell>
+                  <TableCell align="right">{idx + 1}</TableCell>
                   <TableCell>
                     {row?.tanggal
                       ? moment(row.tanggal).format("DD/MM/YYYY")
                       : ""}
                   </TableCell>
                   <TableCell>#SK{row.nopendaftaran}#</TableCell>
-                  <TableCell>{row.nmpasien}</TableCell>
+                  <TableCell>{row.nama_pasien}</TableCell>
                   <TableCell>{row.nama_tindakan}</TableCell>
                   <TableCell>{row.nama_karyawan}</TableCell>
+                  <TableCell>{row?.nama_keterangan || "-"}</TableCell>
                   <TableCell align="right">{row.jml_gigi}</TableCell>
                   <TableCell align="right">
                     {row.total_biaya.toLocaleString()}
@@ -162,7 +164,7 @@ const Earning = () => {
                 }}
               >
                 <TableCell></TableCell>
-                <TableCell colSpan={5}>Jumlah</TableCell>
+                <TableCell colSpan={6}>Jumlah</TableCell>
                 <TableCell align="right">{totalJumlahGigi}</TableCell>
                 <TableCell align="right">
                   {formatCurrency(totalBiayaPasang)}

@@ -3,6 +3,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  Divider,
   Stack,
   TextField,
   RadioGroup,
@@ -23,6 +24,7 @@ import {
   TableCell,
   CircularProgress,
   FormHelperText,
+  alpha,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useFetchMasterAction } from "../../hooks/useFetchMasterAction";
@@ -31,23 +33,39 @@ import moment from "moment";
 import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
 import { useUpdateQueue } from "../../hooks/useMutateQueue";
 import { useFetchMasterPelayanan } from "../../hooks/useFetchMasterPelayanan";
-import { kategoriMap } from "../../constants/variables";
+import { useFetchJenisGigi } from "../../hooks/useFetchJenisGigi";
 import { useFetchShift } from "../../hooks/useFetchShift";
 import { useFetchPDFInvoice } from "../../hooks/useFetchPDFInvoice";
-import { Print } from "@mui/icons-material";
+import { Print, ReceiptLong } from "@mui/icons-material";
 import { useFetchDeposit } from "../../hooks/useFetchDeposit";
 import { Controller, useForm } from "react-hook-form";
 import usePdfStore from "../../store/pdfStore";
 
+const readOnlySx = { "& .MuiInputBase-input": { bgcolor: "action.hover" } };
+
 const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
   const { data: masterTindakan, isFetching: isFetchingMasterTindakan } =
     useFetchMasterAction();
-  const { data: masterKaryawan } = useFetchKaryawan();
-  const { data: masterPelayanan } = useFetchMasterPelayanan();
-  const { data: masterShift } = useFetchShift();
+  const { data: masterKaryawan, isLoading: isLoadingKaryawan } =
+    useFetchKaryawan();
+  const { data: masterPelayanan, isLoading: isLoadingPelayanan } =
+    useFetchMasterPelayanan();
+  const { data: masterShift, isLoading: isLoadingShift } = useFetchShift();
+  const { data: jenisGigi, isLoading: isLoadingJenisGigi } =
+    useFetchJenisGigi();
   const { isFetching, refetch } = useFetchPDFInvoice(queue?.id, {
     enabled: false,
   });
+
+  // Tunggu semua master data (terutama jenis gigi) siap sebelum nampilin
+  // form — kalau nggak, radio "Tarif Per Gigi" bisa kebuka sebelum data
+  // kelar di-fetch dan gagal ke-auto-select.
+  const isMasterDataLoading =
+    isFetchingMasterTindakan ||
+    isLoadingKaryawan ||
+    isLoadingPelayanan ||
+    isLoadingShift ||
+    isLoadingJenisGigi;
 
   const { openDialog, setPdfURL, setLoading, setError } = usePdfStore();
 
@@ -56,9 +74,8 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
   const {
     control,
     handleSubmit,
-    reset,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     watch,
   } = useForm({
     defaultValues: { ...queue, kdtindakan: "01" },
@@ -84,22 +101,26 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
     return null;
   }, [deposit, queue]);
 
-  const isDpExist = !!resolvedDP;
   const currentPelayanan = useMemo(() => {
     return safeArray(masterPelayanan).find((item) => {
-      if (watch("kdshift") && watch("jml_gigi") && watch("tarif")) {
+      if (watch("kdshift") && watch("jml_gigi") && watch("id_jenis_gigi")) {
         return (
           item.kdshift === watch("kdshift") &&
           item.jml_gigi === watch("jml_gigi") &&
-          item.kategori === kategoriMap[watch("tarif")]
+          item.id_jenis_gigi === watch("id_jenis_gigi")
         );
       }
     });
-  }, [masterPelayanan, watch("kdshift"), watch("jml_gigi"), watch("tarif")]);
+  }, [masterPelayanan, watch("kdshift"), watch("jml_gigi"), watch("id_jenis_gigi")]);
 
-  const handleTarifChange = (e, field) => {
-    const value = Number(e.target.value.replace(/\D/g, ""));
-    field.onChange(value || "");
+  const findJenisGigiByTarif = (tarif) =>
+    safeArray(jenisGigi).find((item) => Number(item.tarif) === Number(tarif));
+
+  const handleJenisGigiChange = (e, field) => {
+    const id = Number(e.target.value);
+    field.onChange(id || "");
+    const matched = safeArray(jenisGigi).find((item) => item.id === id);
+    setValue("tarif", matched?.tarif || 0);
   };
 
   const handleBiayaPerbaikanChange = (e, field) => {
@@ -112,20 +133,19 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
 
     setValue("kdtindakan", newKode); // wajib untuk form state
 
-    if (newKode === "03") {
-      setValue("dp", 0);
-      setValue("iddp", queue?.iddp || null);
-      setValue("tarif", 0);
-      setValue("batal_dp", !!queue?.iddp);
-      setValue("jml_gigi", 0);
-    } else {
-      setValue("idkaryawan", resolvedDP?.idkaryawan || null);
-      setValue("jml_gigi", resolvedDP?.jumlah_gigi || 0);
-      setValue(
-        "tarif",
-        isDpExist && newKode !== "03" ? resolvedDP?.tarif_per_gigi : 0
-      );
-    }
+    // Reset field di bawah Tindakan — nggak ada nilai yang nyangkut dari
+    // pilihan tindakan sebelumnya. Teknisi dikecualikan, tetap dipertahankan.
+    setValue("tarif", 0);
+    setValue("id_jenis_gigi", "");
+    setValue("jml_gigi", 0);
+    setValue("kdshift", "");
+    setValue("komisi_kolektif", 0);
+    setValue("komisi_pribadi", 0);
+    setValue("biaya_perbaikan", 0);
+    setValue("biaya_perbaikan_custom", "");
+    setValue("dp", 0);
+    setValue("iddp", newKode === "03" ? queue?.iddp || null : null);
+    setValue("batal_dp", newKode === "03" ? !!queue?.iddp : false);
   };
 
   const handlePrintInvoice = async () => {
@@ -180,18 +200,41 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
     }
   }, [currentPelayanan, setValue]);
 
+  // Data queue lama cuma nyimpen `tarif` (angka), belum ada `id_jenis_gigi`.
+  // Cocokkan ke jenis gigi begitu master-nya kelar di-fetch, biar radio
+  // "Tarif Per Gigi" ke-select waktu buka dialog edit. Kalau ada DP, DP yang
+  // jadi sumber tarif (prioritas lebih tinggi daripada tarif queue lama).
+  // `jenisGigi`/`resolvedDP` bisa kelar fetch belakangan (async, urutan nggak
+  // pasti) — effect ini sengaja jalan ulang tiap salah satunya berubah, dan
+  // nggak pernah nimpa id_jenis_gigi yang udah berhasil ke-set, supaya tetap
+  // "nyoba lagi" begitu data yang telat itu akhirnya masuk.
   useEffect(() => {
     if (resolvedDP) {
       setValue("idkaryawan", resolvedDP.idkaryawan);
       setValue("jml_gigi", resolvedDP.jumlah_gigi);
       setValue("tarif", resolvedDP.tarif_per_gigi);
     }
-  }, [resolvedDP, setValue]);
+
+    if (watch("id_jenis_gigi")) return;
+
+    const sourceTarif = resolvedDP?.tarif_per_gigi ?? queue?.tarif;
+    const matched = findJenisGigiByTarif(sourceTarif);
+    if (matched) setValue("id_jenis_gigi", matched.id);
+  }, [resolvedDP, queue, jenisGigi, setValue]);
 
   return (
     <Dialog maxWidth="md" fullWidth open={isOpen}>
-      <DialogTitle>Rincian Biaya</DialogTitle>
-      <DialogContent>
+      <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <ReceiptLong color="primary" />
+        Rincian Biaya
+      </DialogTitle>
+      <DialogContent dividers>
+        {isMasterDataLoading ? (
+          <Box display="flex" justifyContent="center" py={6}>
+            <CircularProgress />
+          </Box>
+        ) : (
+        <>
         <form onSubmit={handleSubmit(handleUpdateQueue)}>
           <Box sx={{ mt: 2 }}>
             <Grid container spacing={2}>
@@ -206,46 +249,44 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   }
                   fullWidth
                   InputProps={{ readOnly: true }}
+                  sx={readOnlySx}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="Nama Pasien"
-                  value={queue?.nmpasien || "-"}
+                  value={queue?.nama_pasien || "-"}
                   fullWidth
                   InputProps={{ readOnly: true }}
+                  sx={readOnlySx}
                 />
               </Grid>
 
               {/* Pilih Tindakan */}
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <FormLabel>Tindakan</FormLabel>
-                  {isFetchingMasterTindakan ? (
-                    <CircularProgress />
-                  ) : (
-                    <Controller
-                      name="kdtindakan"
-                      control={control}
-                      rules={{ required: "Tindakan wajib dipilih" }}
-                      render={({ field }) => (
-                        <RadioGroup
-                          row
-                          {...field}
-                          onChange={handleTindakanChange}
-                        >
-                          {safeArray(masterTindakan).map((item) => (
-                            <FormControlLabel
-                              key={item?.kdtindakan}
-                              control={<Radio />}
-                              value={item?.kdtindakan}
-                              label={item?.nmtindakan}
-                            />
-                          ))}
-                        </RadioGroup>
-                      )}
-                    />
-                  )}
+                  <FormLabel required>Tindakan</FormLabel>
+                  <Controller
+                    name="kdtindakan"
+                    control={control}
+                    rules={{ required: "Tindakan wajib dipilih" }}
+                    render={({ field }) => (
+                      <RadioGroup
+                        row
+                        {...field}
+                        onChange={handleTindakanChange}
+                      >
+                        {safeArray(masterTindakan).map((item) => (
+                          <FormControlLabel
+                            key={item?.kdtindakan}
+                            control={<Radio />}
+                            value={item?.kdtindakan}
+                            label={item?.nmtindakan}
+                          />
+                        ))}
+                      </RadioGroup>
+                    )}
+                  />
                   {errors.kdtindakan && (
                     <FormHelperText>{errors.kdtindakan.message}</FormHelperText>
                   )}
@@ -256,7 +297,8 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
               {watch("kdtindakan") && (
                 <>
                   <Grid item xs={12}>
-                    <Typography variant="h6" fontWeight="bold">
+                    <Divider sx={{ mb: 1 }} />
+                    <Typography variant="subtitle1" fontWeight={600}>
                       Teknisi
                     </Typography>
                   </Grid>
@@ -296,7 +338,8 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
               {["01", "04"].includes(watch("kdtindakan")) && (
                 <>
                   <Grid item xs={12}>
-                    <Typography variant="h6" fontWeight="bold">
+                    <Divider sx={{ mb: 1 }} />
+                    <Typography variant="subtitle1" fontWeight={600}>
                       Pemasangan
                     </Typography>
                   </Grid>
@@ -304,33 +347,31 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   {/* Tarif Per Gigi */}
                   <Grid item xs={12}>
                     <Controller
-                      name="tarif"
+                      name="id_jenis_gigi"
                       control={control}
                       rules={{ required: "Tarif per gigi wajib dipilih" }}
                       render={({ field }) => (
                         <FormControl fullWidth>
-                          <FormLabel>Tarif Per Gigi</FormLabel>
+                          <FormLabel required>Tarif Per Gigi</FormLabel>
                           <RadioGroup
                             row
                             {...field}
-                            onChange={(e) => handleTarifChange(e, field)}
+                            onChange={(e) => handleJenisGigiChange(e, field)}
                           >
-                            <FormControlLabel
-                              value={40000}
-                              control={<Radio />}
-                              label="40.000"
-                            />
-                            <FormControlLabel
-                              value={60000}
-                              control={<Radio />}
-                              label="60.000"
-                            />
-                            <FormControlLabel
-                              value={160000}
-                              control={<Radio />}
-                              label="160.000"
-                            />
+                            {safeArray(jenisGigi).map((item) => (
+                              <FormControlLabel
+                                key={item.id}
+                                value={item.id}
+                                control={<Radio />}
+                                label={formatCurrency(item.tarif)}
+                              />
+                            ))}
                           </RadioGroup>
+                          {errors.id_jenis_gigi && (
+                            <FormHelperText error>
+                              {errors.id_jenis_gigi.message}
+                            </FormHelperText>
+                          )}
                         </FormControl>
                       )}
                     />
@@ -396,23 +437,41 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                     />
                   </Grid>
 
-                  {/* Komisi - read only */}
+                  {/* Komisi - otomatis dari t_pelayanan, tapi tetap bisa ditimpa manual */}
                   <Grid item xs={6} sm={4}>
-                    <TextField
-                      label="Kolektif"
-                      fullWidth
-                      type="number"
-                      value={currentPelayanan?.komisi_kolektif || 0}
-                      InputProps={{ readOnly: true }}
+                    <Controller
+                      name="komisi_kolektif"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Kolektif"
+                          fullWidth
+                          type="number"
+                          value={field.value || 0}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
+                        />
+                      )}
                     />
                   </Grid>
                   <Grid item xs={6} sm={4}>
-                    <TextField
-                      label="Pribadi"
-                      fullWidth
-                      type="number"
-                      value={currentPelayanan?.komisi_pribadi || 0}
-                      InputProps={{ readOnly: true }}
+                    <Controller
+                      name="komisi_pribadi"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Pribadi"
+                          fullWidth
+                          type="number"
+                          value={field.value || 0}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
+                        />
+                      )}
                     />
                   </Grid>
                 </>
@@ -422,7 +481,8 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
               {["03", "04"].includes(watch("kdtindakan")) && (
                 <>
                   <Grid item xs={12}>
-                    <Typography variant="h6" fontWeight="bold">
+                    <Divider sx={{ mb: 1 }} />
+                    <Typography variant="subtitle1" fontWeight={600}>
                       Perbaikan
                     </Typography>
                   </Grid>
@@ -514,81 +574,85 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
             </Grid>
           </Box>
         </form>
-      </DialogContent>
-      <DialogActions>
-        <Grid container spacing={2} p={2}>
-          <Grid item xs={12}>
-            <TableContainer component={Paper} sx={{ mt: 2 }}>
-              <Table>
-                <TableBody>
-                  {/* Tampilkan hanya jika ada DP */}
-                  {watch("kdtindakan") !== "03" && dpAmount > 0 && (
-                    <>
-                      <TableRow>
-                        <TableCell>
-                          <Typography>Total Sebelum DP</Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography>{formatCurrency(totalBiaya)}</Typography>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <Typography>
-                            Deposit di tanggal{" "}
-                            {moment(deposit.data?.tanggal).format("DD/MM/YYYY")}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography>- {formatCurrency(dpAmount)}</Typography>
-                        </TableCell>
-                      </TableRow>
-                    </>
-                  )}
 
-                  {/* Total Akhir selalu ditampilkan */}
+        {/* Ringkasan Biaya */}
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="subtitle1" fontWeight={600} mb={1}>
+          Ringkasan Biaya
+        </Typography>
+        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+          <Table>
+            <TableBody>
+              {/* Tampilkan hanya jika ada DP */}
+              {watch("kdtindakan") !== "03" && dpAmount > 0 && (
+                <>
                   <TableRow>
                     <TableCell>
-                      <Typography fontWeight="bold">Total Akhir ({totalSetelahDP >= 0 ? "Sisa Pembayaran" : "Kelebihan Pembayaran"})</Typography>
+                      <Typography>Total Sebelum DP</Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Typography fontWeight="bold">
-                        {formatCurrency(totalSetelahDP)}
-                      </Typography>
+                      <Typography>{formatCurrency(totalBiaya)}</Typography>
                     </TableCell>
                   </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Grid>
-          <Grid item xs={12}>
-            <Box display="flex" justifyContent="flex-end" gap={2}>
-              <Button variant="contained" onClick={onClose} color="secondary">
-                Tutup
-              </Button>
-              <Button
-                onClick={handleSubmit(handleUpdateQueue)}
-                color="primary"
-                variant="contained"
-                disabled={mutation.isLoading}
-              >
-                {mutation.isLoading ? "Menambahkan..." : "Simpan"}
-              </Button>
-              {isPrintable && (
-                <Button
-                  loading={isFetching}
-                  onClick={handlePrintInvoice}
-                  color="success"
-                  variant="contained"
-                  disabled={!isPrintable}
-                  startIcon={<Print />}
-                >
-                  Cetak Kwitansi
-                </Button>
+                  <TableRow>
+                    <TableCell>
+                      <Typography>
+                        Deposit di tanggal{" "}
+                        {moment(deposit.data?.tanggal).format("DD/MM/YYYY")}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography>- {formatCurrency(dpAmount)}</Typography>
+                    </TableCell>
+                  </TableRow>
+                </>
               )}
-            </Box>
-          </Grid>
-        </Grid>
+
+              {/* Total Akhir selalu ditampilkan */}
+              <TableRow
+                sx={{ bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06) }}
+              >
+                <TableCell>
+                  <Typography fontWeight={700}>
+                    Total Akhir ({totalSetelahDP >= 0 ? "Sisa Pembayaran" : "Kelebihan Pembayaran"})
+                  </Typography>
+                </TableCell>
+                <TableCell align="right">
+                  <Typography fontWeight={700} color={totalSetelahDP < 0 ? "error.main" : "text.primary"}>
+                    {formatCurrency(totalSetelahDP)}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+        </>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button variant="outlined" color="inherit" onClick={onClose}>
+          Tutup
+        </Button>
+        <Button
+          onClick={handleSubmit(handleUpdateQueue)}
+          color="primary"
+          variant="contained"
+          disabled={mutation.isLoading}
+        >
+          {mutation.isLoading ? "Menambahkan..." : "Simpan"}
+        </Button>
+        {isPrintable && (
+          <Button
+            loading={isFetching}
+            onClick={handlePrintInvoice}
+            color="success"
+            variant="contained"
+            disabled={!isPrintable}
+            startIcon={<Print />}
+          >
+            Cetak Kwitansi
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

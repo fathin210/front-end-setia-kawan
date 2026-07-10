@@ -5,8 +5,9 @@ const ROUTES = {
   DEPOSIT: "/patient/deposit",
   ADMIN_EMPLOYEE: "/employee/admin",
   EMPLOYEE_COMMISSIONS: "/employee/comissions",
-  TARIF_KOMISI_GIGI: "/settings/tarif-komisi-gigi",
+  KOMISI_PERBAIKAN: "/settings/komisi-perbaikan",
   KOMISI_KARYAWAN_PER_SHIFT: "/settings/komisi-karyawan-shift",
+  JENIS_GIGI: "/settings/jenis-gigi",
   PENDAPATAN: "/earning/earning",
   REKAP_PENDAPATAN: "/earning/summary-earning",
   LOGIN: "/login"

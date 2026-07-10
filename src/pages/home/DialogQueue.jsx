@@ -19,7 +19,10 @@ import {
   TableBody,
   Autocomplete,
   TextField,
+  Alert,
+  alpha,
 } from "@mui/material";
+import { EventNote } from "@mui/icons-material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import { useAddToQueueMutation } from "../../hooks/useMutateQueue";
@@ -52,18 +55,47 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
 
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Tambah ke Antrian</DialogTitle>
+      <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <EventNote color="primary" />
+        Tambah ke Antrian
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2}>
-          <Typography variant="body1">
-            <strong>Nama:</strong> {patient?.nmpasien || "-"}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Nomor Pasien:</strong> {patient?.nomorpasien || "-"}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Alamat:</strong> {patient?.alamat || "-"}
-          </Typography>
+          <Stack
+            direction="row"
+            flexWrap="wrap"
+            gap={3}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+            }}
+          >
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Nama
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {patient?.nmpasien || "-"}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Nomor Pasien
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {patient?.nomorpasien || "-"}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Alamat
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {patient?.alamat || "-"}
+              </Typography>
+            </Box>
+          </Stack>
           <DesktopDatePicker
             sx={{ flex: 1 }}
             format="DD/MM/YYYY"
@@ -102,7 +134,7 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
             )}
           />
           <Box sx={{ mb: 2 }}>
-            <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+            <Typography variant="subtitle1" fontWeight={600}>
               Riwayat Rincian Pelayanan
             </Typography>
             <Divider sx={{ my: 2 }} />
@@ -126,30 +158,31 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
           {!isLoading && !error && rincianData?.length > 0 ? (
             <TableContainer
               component={Paper}
-              sx={{ borderRadius: 2, boxShadow: 3 }}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
             >
               <Table>
-                <TableHead sx={{ background: "#1976d2" }}>
+                <TableHead sx={{ bgcolor: "primary.main" }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
                       Tanggal Transaksi
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
                       Invoice
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
                       Nama Pasien
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
                       Tindakan
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
                       Teknisi
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
                       Total Biaya
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                    <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
                       Keterangan
                     </TableCell>
                   </TableRow>
@@ -176,15 +209,15 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
           ) : (
             !isLoading &&
             !error && (
-              <Typography sx={{ textAlign: "center", color: "gray", mt: 3 }}>
+              <Typography sx={{ textAlign: "center", color: "text.secondary", mt: 3 }}>
                 Tidak ada data rincian pelayanan.
               </Typography>
             )
           )}
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} variant="contained" color="error">
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} variant="outlined" color="inherit">
           Tutup
         </Button>
         <Button

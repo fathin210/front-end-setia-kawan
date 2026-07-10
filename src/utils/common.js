@@ -1,5 +1,13 @@
 export const safeArray = (data) => Array.isArray(data) ? data : []
 
+export const getInitials = (name) =>
+  name
+    ?.trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "?";
+
 export const formatCurrency = (value, locale = "id-ID", currency = "IDR") => {
   const numericValue = Number(value);
   if (isNaN(numericValue)) return "Invalid Number";

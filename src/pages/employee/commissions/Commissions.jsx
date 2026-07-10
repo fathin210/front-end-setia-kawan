@@ -116,7 +116,7 @@ const Commissions = () => {
 
   const checkPassword = (event) => {
     event.preventDefault();
-    if (password === "Setia123") {
+    if (password === "kancil08") {
       setIsPassed(true);
     }
   };

@@ -25,7 +25,6 @@ import {
   Tabs,
   Tab,
   Typography,
-  Autocomplete,
   alpha,
 } from "@mui/material";
 import { formatCurrency, safeArray } from "../../utils/common";
@@ -47,10 +46,10 @@ import {
 import { DesktopDatePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import useListQueue from "../../hooks/useListQueue";
-import { useFetchStatus } from "../../hooks/useFetchStatus";
 import { useFetchPDFCard } from "../../hooks/useFetchPDFCard";
 import DialogQueueDetail from "./DialogQueueDetail";
 import DialogEditQueue from "./DialogEditQueue";
+import DialogStatus from "./DialogStatus";
 import {
   ADD_QUEUE_DETAIL,
   CLEAR_QUEUE,
@@ -62,7 +61,6 @@ import {
 import {
   useClearQueueMutation,
   useDeleteQueue,
-  useUpdateQueueStatus,
 } from "../../hooks/useMutateQueue";
 import DialogDeposit from "./DialogDeposit";
 import usePdfStore from "../../store/pdfStore";
@@ -107,9 +105,6 @@ const ListQueue = () => {
   });
 
   const { mutateAsync: deleteQueue } = useDeleteQueue();
-  const { data: masterStatus } = useFetchStatus();
-  const updateStatusMutation = useUpdateQueueStatus();
-  const [selectedStatus, setSelectedStatus] = useState(null);
 
   const { isFetching: isFetchingCard, refetch: refetchCard } = useFetchPDFCard(
     null,
@@ -139,7 +134,6 @@ const ListQueue = () => {
   const handleDialogClose = () => {
     setDialog(false);
     setSelectedQueue(null);
-    setSelectedStatus(null);
   };
 
   const handleMenuOpen = (event, queue) => {
@@ -314,11 +308,6 @@ const ListQueue = () => {
         </MenuItem>
         <MenuItem
           onClick={() => {
-            setSelectedStatus(
-              safeArray(masterStatus).find(
-                (item) => item.kdstatus === selectedQueue?.ket
-              ) || null
-            );
             handleDialogOpen(EDIT_STATUS);
             handleMenuClose();
           }}
@@ -454,45 +443,11 @@ const ListQueue = () => {
         />
       )}
       {dialog === EDIT_STATUS && (
-        <Dialog open onClose={handleDialogClose} fullWidth maxWidth="xs">
-          <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Flag color="primary" />
-            Ubah Status Antrian
-          </DialogTitle>
-          <DialogContent dividers sx={{ pt: 2 }}>
-            <Autocomplete
-              options={safeArray(masterStatus)}
-              getOptionLabel={(option) => option?.nmstatus || ""}
-              value={selectedStatus}
-              onChange={(_, newValue) => setSelectedStatus(newValue)}
-              renderInput={(params) => (
-                <TextField {...params} label="Status" fullWidth />
-              )}
-            />
-          </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button variant="outlined" color="inherit" onClick={handleDialogClose}>
-              Tutup
-            </Button>
-            <Button
-              variant="contained"
-              disabled={!selectedStatus || updateStatusMutation.isLoading}
-              onClick={async () => {
-                try {
-                  await updateStatusMutation.mutateAsync({
-                    id: selectedQueue?.id,
-                    ket: selectedStatus?.kdstatus,
-                  });
-                  handleDialogClose();
-                } catch {
-                  // alert kegagalan sudah ditangani mutation
-                }
-              }}
-            >
-              {updateStatusMutation.isLoading ? "Menyimpan..." : "Simpan"}
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <DialogStatus
+          isOpen={true}
+          onClose={handleDialogClose}
+          queue={selectedQueue}
+        />
       )}
     </>
   );

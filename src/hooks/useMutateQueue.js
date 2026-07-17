@@ -120,7 +120,8 @@ export const useUpdateQueueStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ket }) => putFetcher(`${baseURL}/${id}/status`, { ket }),
+    mutationFn: ({ id, ket, idkaryawan }) =>
+      putFetcher(`${baseURL}/${id}/status`, { ket, idkaryawan: idkaryawan || null }),
     onMutate: () => {
       showAlert("Memproses permintaan...", "waiting");
     },

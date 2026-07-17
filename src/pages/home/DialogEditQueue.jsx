@@ -42,7 +42,7 @@ const DialogEditQueue = ({ isOpen, onClose, queue }) => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      kdtindakan: queue?.kdtindakan || "",
+      kdtindakan: queue?.kdtindakan || null,
       idkaryawan: queue?.idkaryawan || null,
     },
   });
@@ -97,11 +97,10 @@ const DialogEditQueue = ({ isOpen, onClose, queue }) => {
 
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <FormLabel required>Tindakan</FormLabel>
+                  <FormLabel>Tindakan</FormLabel>
                   <Controller
                     name="kdtindakan"
                     control={control}
-                    rules={{ required: "Tindakan wajib dipilih" }}
                     render={({ field }) => (
                       <RadioGroup row {...field}>
                         {safeArray(masterTindakan).map((item) => (
@@ -129,7 +128,6 @@ const DialogEditQueue = ({ isOpen, onClose, queue }) => {
                 <Controller
                   name="idkaryawan"
                   control={control}
-                  rules={{ required: "Teknisi wajib dipilih" }}
                   render={({ field }) => (
                     <Autocomplete
                       options={safeArray(masterKaryawan)}

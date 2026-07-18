@@ -24,7 +24,7 @@ import HistoryPatient from "../patient/detail-patient/HistoryPatient";
 
 const DialogQueue = ({ isOpen, onClose, patient }) => {
   const [page, setPage] = useState(1);
-  const { data: listRes, error, isLoading } = useListQueue("", patient?.nomorpasien, "x", page);
+  const { data: listRes, error, isLoading } = useListQueue("", "", "x", page, undefined, patient?.nomorpasien);
   const { data: masterKaryawan } = useFetchKaryawan();
   const [draft, setDraft] = useState({
     tanggal_pelaks: moment(Date.now()).format("YYYY-MM-DD"),

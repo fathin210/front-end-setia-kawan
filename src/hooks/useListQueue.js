@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetcher } from "../utils/fetcher";
 
-const useListQueue = (date, search, status = "x", page, limit = 6) => {
+const useListQueue = (date, search, status = "x", page, limit = 6, nomorpasien) => {
   return useQuery({
-    queryKey: ["listQueue", date, search, status, page, limit],
+    queryKey: ["listQueue", date, search, status, page, limit, nomorpasien],
     queryFn: () => {
       const pageQuery = page ? `&page=${page}&limit=${limit}` : "";
-      return fetcher(`${import.meta.env.VITE_API_BASE_URL}/daftar?date=${date}&search=${search}&status=${status ?? ''}${pageQuery}`)
+      const nomorpasienQuery = nomorpasien ? `&nomorpasien=${nomorpasien}` : "";
+      return fetcher(`${import.meta.env.VITE_API_BASE_URL}/daftar?date=${date}&search=${search}&status=${status ?? ''}${pageQuery}${nomorpasienQuery}`)
     },
     staleTime: 1000 * 5, // Cache selama 20 detik
     keepPreviousData: !!page,

@@ -47,7 +47,7 @@ const DetailPatient = () => {
     error,
     isLoading,
     refetch,
-  } = useListQueue("", activePatient?.nomorpasien, undefined, page);
+  } = useListQueue("", "", undefined, page, undefined, activePatient?.nomorpasien);
 
   const rincianData = rincianRes?.data;
 

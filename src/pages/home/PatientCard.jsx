@@ -110,7 +110,6 @@ const PatientCard = ({ data }) => {
               <Chip
                 size="small"
                 icon={gender.icon}
-                label={gender.label}
                 sx={{
                   bgcolor: alpha(gender.color, 0.12),
                   color: gender.color,

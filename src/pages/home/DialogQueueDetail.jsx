@@ -442,12 +442,12 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   {/* Komisi - otomatis dari t_pelayanan, tapi tetap bisa ditimpa manual */}
                   <Grid item xs={6} sm={4}>
                     <Controller
-                      name="komisi_kolektif"
+                      name="komisi_pribadi"
                       control={control}
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Kolektif"
+                          label="Pribadi"
                           fullWidth
                           type="number"
                           value={field.value || 0}
@@ -460,12 +460,12 @@ const DialogQueueDetail = ({ isOpen, onClose, queue }) => {
                   </Grid>
                   <Grid item xs={6} sm={4}>
                     <Controller
-                      name="komisi_pribadi"
+                      name="komisi_kolektif"
                       control={control}
                       render={({ field }) => (
                         <TextField
                           {...field}
-                          label="Pribadi"
+                          label="Kolektif"
                           fullWidth
                           type="number"
                           value={field.value || 0}

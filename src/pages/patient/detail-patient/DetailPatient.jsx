@@ -2,34 +2,22 @@ import React, { useState } from "react";
 import {
   Container,
   Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Card,
   CardContent,
   Grid,
   Divider,
   Box,
-  CircularProgress,
-  Alert,
   Stack,
   Avatar,
   Button,
-  IconButton,
-  Tooltip,
-  Checkbox,
   Dialog,
   DialogTitle,
   DialogActions,
+  Pagination,
 } from "@mui/material";
-import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import { DeleteOutline, Person, SwapHoriz, WarningAmber } from "@mui/icons-material";
-import { formatCurrency, safeArray } from "../../../utils/common";
+import { safeArray } from "../../../utils/common";
 import useListQueue from "../../../hooks/useListQueue";
 import DialogPatientForm from "../../home/DialogPatientForm";
 import usePatientStore from "../../../store/patientStore";
@@ -38,6 +26,7 @@ import { ADD_QUEUE, EDIT_PATIENT } from "../../../constants/variables";
 import ROUTES from "../../../constants/routes";
 import DialogQueue from "../../home/DialogQueue";
 import DialogMoveTransaction from "./DialogMoveTransaction";
+import HistoryPatient from "./HistoryPatient";
 import MaleImage from "../../../assets/male.png";
 import FemaleImage from "../../../assets/female.png";
 
@@ -48,21 +37,23 @@ const DetailPatient = () => {
   const [moveTarget, setMoveTarget] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [page, setPage] = useState(1);
   const deleteMutation = useDeletePatient();
 
   const handleDialog = (value) => setDialog(value);
 
   const {
-    data: rincianData,
+    data: rincianRes,
     error,
     isLoading,
     refetch,
-  } = useListQueue("", activePatient?.nomorpasien);
+  } = useListQueue("", activePatient?.nomorpasien, undefined, page);
+
+  const rincianData = rincianRes?.data;
 
   const allSelected =
     safeArray(rincianData).length > 0 &&
     selectedIds.length === rincianData.length;
-  const someSelected = selectedIds.length > 0 && !allSelected;
 
   const toggleSelectAll = () => {
     setSelectedIds(allSelected ? [] : safeArray(rincianData).map((row) => row.id));
@@ -195,102 +186,26 @@ const DetailPatient = () => {
         )}
       </Box>
 
-      {/* STATE LOADING */}
-      {isLoading && (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
-          <CircularProgress />
+      <HistoryPatient
+        listQueue={{ data: rincianData, error, isLoading }}
+        showTitle={false}
+        enableActions
+        selectedIds={selectedIds}
+        onToggleSelectAll={toggleSelectAll}
+        onToggleSelectRow={toggleSelectRow}
+        onMoveRow={(row) => setMoveTarget([row])}
+      />
+
+      {!isLoading && !error && rincianRes?.total_pages > 1 && (
+        <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
+          <Pagination
+            color="primary"
+            shape="rounded"
+            page={page}
+            onChange={(_, value) => setPage(value)}
+            count={rincianRes.total_pages}
+          />
         </Box>
-      )}
-
-      {/* STATE ERROR */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Terjadi kesalahan saat mengambil data: {error.message}
-        </Alert>
-      )}
-
-      {/* TABLE RINCIAN */}
-      {!isLoading && !error && rincianData?.length > 0 ? (
-        <TableContainer
-          component={Paper}
-          sx={{ borderRadius: 2, boxShadow: 3 }}
-        >
-          <Table>
-            <TableHead sx={{ background: "#1976d2" }}>
-              <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    sx={{ color: "#fff" }}
-                    checked={allSelected}
-                    indeterminate={someSelected}
-                    onChange={toggleSelectAll}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Tanggal Transaksi
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Invoice
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Nama Pasien
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Tindakan
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Teknisi
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Total Biaya
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
-                  Keterangan
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold", color: "#fff" }} align="center">
-                  Aksi
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rincianData.map((row) => (
-                <TableRow key={row.id} selected={selectedIds.includes(row.id)}>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={selectedIds.includes(row.id)}
-                      onChange={() => toggleSelectRow(row.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {row?.tanggal_pelaks
-                      ? moment(row?.tanggal_pelaks).format("DD-MM-YYYY")
-                      : ""}
-                  </TableCell>
-                  <TableCell>#SK{row.nopendaftaran}#</TableCell>
-                  <TableCell>{row.nama_pasien}</TableCell>
-                  <TableCell>{row?.nama_tindakan || "-"}</TableCell>
-                  <TableCell>{row?.nama_karyawan || "-"}</TableCell>
-                  <TableCell>{formatCurrency(row.total_biaya)}</TableCell>
-                  <TableCell>{row?.ket || "-"}</TableCell>
-                  <TableCell align="center">
-                    <Tooltip title="Pindahkan transaksi ke pasien lain">
-                      <IconButton onClick={() => setMoveTarget([row])} color="primary">
-                        <SwapHoriz fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      ) : (
-        !isLoading &&
-        !error && (
-          <Typography sx={{ textAlign: "center", color: "gray", mt: 3 }}>
-            Tidak ada data rincian pelayanan.
-          </Typography>
-        )
       )}
 
       {dialog === EDIT_PATIENT && (

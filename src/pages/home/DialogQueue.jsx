@@ -11,6 +11,7 @@ import {
   Autocomplete,
   TextField,
   alpha,
+  Pagination,
 } from "@mui/material";
 import { EventNote } from "@mui/icons-material";
 import { DesktopDatePicker } from "@mui/x-date-pickers";
@@ -22,7 +23,8 @@ import { useFetchKaryawan } from "../../hooks/useFetchKaryawan";
 import HistoryPatient from "../patient/detail-patient/HistoryPatient";
 
 const DialogQueue = ({ isOpen, onClose, patient }) => {
-  const listQueue = useListQueue("", patient?.nomorpasien, "all");
+  const [page, setPage] = useState(1);
+  const { data: listRes, error, isLoading } = useListQueue("", patient?.nomorpasien, "x", page);
   const { data: masterKaryawan } = useFetchKaryawan();
   const [draft, setDraft] = useState({
     tanggal_pelaks: moment(Date.now()).format("YYYY-MM-DD"),
@@ -123,7 +125,18 @@ const DialogQueue = ({ isOpen, onClose, patient }) => {
             <Typography variant="subtitle1" fontWeight={600}>
               Riwayat Rincian Pelayanan
             </Typography>
-            <HistoryPatient listQueue={listQueue} />
+            <HistoryPatient listQueue={{ data: listRes?.data, error, isLoading }} />
+            {!isLoading && !error && listRes?.total_pages > 1 && (
+              <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
+                <Pagination
+                  color="primary"
+                  shape="rounded"
+                  page={page}
+                  onChange={(_, value) => setPage(value)}
+                  count={listRes.total_pages}
+                />
+              </Box>
+            )}
           </Box>
         </Stack>
       </DialogContent>

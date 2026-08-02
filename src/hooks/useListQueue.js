@@ -9,7 +9,7 @@ const useListQueue = (date, search, status = "x", page, limit = 6, nomorpasien) 
       const nomorpasienQuery = nomorpasien ? `&nomorpasien=${nomorpasien}` : "";
       return fetcher(`${import.meta.env.VITE_API_BASE_URL}/daftar?date=${date}&search=${search}&status=${status ?? ''}${pageQuery}${nomorpasienQuery}`)
     },
-    staleTime: 1000 * 5, // Cache selama 20 detik
+    staleTime: 1000 * 2, // Cache selama 3 detik
     keepPreviousData: !!page,
   });
 };
